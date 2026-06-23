@@ -8,6 +8,7 @@ using NajaEcho.Domain.ItemCategories;
 using NajaEcho.Domain.Items;
 using NajaEcho.Domain.Locations;
 using NajaEcho.Domain.Ships;
+using NajaEcho.Domain.Loot;
 using NajaEcho.Domain.Warehouse;
 using NajaEcho.Infrastructure.Identity;
 using NajaEcho.Infrastructure.Persistence.Configurations;
@@ -31,6 +32,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<StarSystem> StarSystems => Set<StarSystem>();
     public DbSet<SpaceStation> SpaceStations => Set<SpaceStation>();
     public DbSet<City> Cities => Set<City>();
+    public DbSet<LootLedgerEntry> LootLedger => Set<LootLedgerEntry>();
+    public DbSet<LootMemberStanding> LootMemberStandings => Set<LootMemberStanding>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -51,5 +54,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         modelBuilder.ApplyConfiguration(new StarSystemConfiguration());
         modelBuilder.ApplyConfiguration(new SpaceStationConfiguration());
         modelBuilder.ApplyConfiguration(new CityConfiguration());
+        modelBuilder.ApplyConfiguration(new LootLedgerEntryConfiguration());
+        modelBuilder.ApplyConfiguration(new LootMemberStandingConfiguration());
     }
 }

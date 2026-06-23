@@ -72,7 +72,7 @@ export function AddCharacterDialog({ open, userId, onClose }: AddCharacterDialog
           <DialogTitle>Add Character</DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-3 px-6 py-2">
+        <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1">
             <label htmlFor="add-char-handle" className="text-sm font-medium">
               RSI Handle

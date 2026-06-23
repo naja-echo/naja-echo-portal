@@ -5,7 +5,7 @@ namespace NajaEcho.Infrastructure.Identity;
 
 public sealed class RoleSeeder(RoleManager<IdentityRole<Guid>> roleManager, ILogger<RoleSeeder> logger)
 {
-    private static readonly string[] Roles = ["Admin", "Quartermaster"];
+    private static readonly string[] Roles = ["Admin", "Quartermaster", "CrewResourceOfficer"];
 
     public async Task SeedAsync(CancellationToken ct = default)
     {

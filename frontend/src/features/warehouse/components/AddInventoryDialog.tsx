@@ -110,7 +110,7 @@ export function AddInventoryDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-3 px-6">
+        <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1">
             <label htmlFor="add-item-search" className="text-sm font-medium">
               Search Catalog

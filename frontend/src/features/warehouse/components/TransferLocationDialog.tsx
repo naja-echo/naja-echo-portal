@@ -45,7 +45,7 @@ export function TransferLocationDialog({ open, onOpenChange, rowId, entityType, 
           </DialogDescription>
         </DialogHeader>
 
-        <div className="px-6 py-2 flex flex-col gap-3">
+        <div className="flex flex-col gap-3">
           <LocationCombobox
             value={selectedLocation?.id}
             onValueChange={(loc) => setSelectedLocation(loc ?? undefined)}
