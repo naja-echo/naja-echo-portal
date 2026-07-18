@@ -6,43 +6,26 @@ using NajaEcho.Application.Abstractions;
 using NajaEcho.Domain.Users;
 using NajaEcho.Infrastructure.Identity;
 using NajaEcho.Infrastructure.Persistence;
-using Testcontainers.PostgreSql;
 using Xunit;
 
 namespace NajaEcho.Infrastructure.Tests.Identity;
 
+[Collection(PostgresCollection.Name)]
 public class DiscordExternalLoginServiceTests : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:16-alpine")
-        .Build();
-
+    private readonly PostgresFixture _fixture;
     private ServiceProvider _serviceProvider = null!;
+
+    public DiscordExternalLoginServiceTests(PostgresFixture fixture) => _fixture = fixture;
 
     public async Task InitializeAsync()
     {
-        await _postgres.StartAsync();
-
-        var services = new ServiceCollection();
-        services.AddLogging();
-        services.AddDbContext<AppDbContext>(opts =>
-            opts.UseNpgsql(_postgres.GetConnectionString())
-                .UseSnakeCaseNamingConvention());
-        services.AddIdentityCore<ApplicationUser>()
-            .AddRoles<IdentityRole<Guid>>()
-            .AddEntityFrameworkStores<AppDbContext>();
-        services.AddScoped<IExternalLoginService, DiscordExternalLoginService>();
-
-        _serviceProvider = services.BuildServiceProvider();
-
-        using var scope = _serviceProvider.CreateScope();
-        await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
+        await _fixture.ResetAsync();
+        _serviceProvider = _fixture.BuildIdentityProvider(services =>
+            services.AddScoped<IExternalLoginService, DiscordExternalLoginService>());
     }
 
-    public async Task DisposeAsync()
-    {
-        await _serviceProvider.DisposeAsync();
-        await _postgres.DisposeAsync();
-    }
+    public async Task DisposeAsync() => await _serviceProvider.DisposeAsync();
 
     private IExternalLoginService CreateService()
     {

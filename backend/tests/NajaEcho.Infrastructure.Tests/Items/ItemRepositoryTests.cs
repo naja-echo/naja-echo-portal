@@ -4,36 +4,24 @@ using Microsoft.EntityFrameworkCore;
 using NajaEcho.Domain.Items;
 using NajaEcho.Infrastructure.Items;
 using NajaEcho.Infrastructure.Persistence;
-using Testcontainers.PostgreSql;
 
 namespace NajaEcho.Infrastructure.Tests.Items;
 
+[Collection(PostgresCollection.Name)]
 public sealed class ItemRepositoryTests : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _pg = new PostgreSqlBuilder()
-        .WithDatabase("najaecho_test")
-        .WithUsername("test")
-        .WithPassword("test")
-        .Build();
-
+    private readonly PostgresFixture _fixture;
     private AppDbContext _db = null!;
+
+    public ItemRepositoryTests(PostgresFixture fixture) => _fixture = fixture;
 
     public async Task InitializeAsync()
     {
-        await _pg.StartAsync();
-        var opts = new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql(_pg.GetConnectionString())
-            .UseSnakeCaseNamingConvention()
-            .Options;
-        _db = new AppDbContext(opts);
-        await _db.Database.MigrateAsync();
+        await _fixture.ResetAsync();
+        _db = _fixture.CreateContext();
     }
 
-    public async Task DisposeAsync()
-    {
-        await _db.DisposeAsync();
-        await _pg.DisposeAsync();
-    }
+    public async Task DisposeAsync() => await _db.DisposeAsync();
 
     private static JsonDocument MakeRaw(string uuid, int id, string name) =>
         JsonDocument.Parse($$"""{"id":{{id}},"uuid":"{{uuid}}","name":"{{name}}","id_category":1}""");
