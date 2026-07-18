@@ -1,0 +1,430 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Star Citizen Crafting Blueprint Dataset",
+  "description": "Schema inferred from the supplied crafting blueprint dataset.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "meta",
+    "dismantle",
+    "properties",
+    "resources",
+    "items",
+    "blueprints"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[A-Za-z0-9.-]+)?$"
+    },
+    "meta": {
+      "$ref": "#/$defs/meta"
+    },
+    "dismantle": {
+      "$ref": "#/$defs/dismantleConfiguration"
+    },
+    "properties": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z0-9_]+$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/propertyDefinition"
+      }
+    },
+    "resources": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "blueprints": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/blueprint"
+      }
+    }
+  },
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "nullableString": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "totalBlueprints",
+        "totalProducts",
+        "totalResources",
+        "totalItems"
+      ],
+      "properties": {
+        "totalBlueprints": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "totalProducts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "totalResources": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "totalItems": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "dismantleConfiguration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "efficiency",
+        "dismantleTimeSeconds",
+        "blacklistedResources",
+        "blacklistedEntityClasses"
+      ],
+      "properties": {
+        "efficiency": {
+          "type": "number",
+          "minimum": 0
+        },
+        "dismantleTimeSeconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blacklistedResources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/blacklistedResource"
+          }
+        },
+        "blacklistedEntityClasses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/blacklistedEntityClass"
+          }
+        }
+      }
+    },
+    "blacklistedResource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "guid",
+        "name"
+      ],
+      "properties": {
+        "guid": {
+          "$ref": "#/$defs/uuid"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "blacklistedEntityClass": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "guid",
+        "name",
+        "nameKey"
+      ],
+      "properties": {
+        "guid": {
+          "$ref": "#/$defs/uuid"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nameKey": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "propertyDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "unit",
+        "category"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "unit": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "category": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nameOverrides": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "blueprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "guid",
+        "tag",
+        "productEntityClass",
+        "gear",
+        "type",
+        "subtype",
+        "tiers",
+        "productName",
+        "manufacturer"
+      ],
+      "properties": {
+        "guid": {
+          "$ref": "#/$defs/uuid"
+        },
+        "tag": {
+          "type": "string",
+          "minLength": 1
+        },
+        "productEntityClass": {
+          "$ref": "#/$defs/uuid"
+        },
+        "gear": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "subtype": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "tiers": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/tier"
+          }
+        },
+        "productName": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "manufacturer": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "isDefault": {
+          "type": "boolean"
+        },
+        "suggestedName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "suggestedProductEntityClass": {
+          "$ref": "#/$defs/uuid"
+        },
+        "cigDataError": {
+          "type": "boolean"
+        }
+      }
+    },
+    "tier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "craftTimeSeconds",
+        "slots"
+      ],
+      "properties": {
+        "craftTimeSeconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "slots": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/slot"
+          }
+        }
+      }
+    },
+    "slot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "options",
+        "modifiers"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "options": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/materialOption"
+          }
+        },
+        "modifiers": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/modifier"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "materialOption": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/resourceOption"
+        },
+        {
+          "$ref": "#/$defs/itemOption"
+        }
+      ]
+    },
+    "resourceOption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "quantity",
+        "minQuality",
+        "resourceName"
+      ],
+      "properties": {
+        "type": {
+          "const": "resource"
+        },
+        "quantity": {
+          "type": "number",
+          "minimum": 0
+        },
+        "minQuality": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "resourceName": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "itemOption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "quantity",
+        "minQuality",
+        "modifiers",
+        "itemName"
+      ],
+      "properties": {
+        "type": {
+          "const": "item"
+        },
+        "quantity": {
+          "type": "number",
+          "minimum": 0
+        },
+        "minQuality": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "modifiers": {
+          "type": "null"
+        },
+        "itemName": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "modifier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "startQuality",
+        "endQuality",
+        "modifierAtStart",
+        "modifierAtEnd",
+        "propertyName",
+        "propertyKey"
+      ],
+      "properties": {
+        "startQuality": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "endQuality": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "modifierAtStart": {
+          "type": "number"
+        },
+        "modifierAtEnd": {
+          "type": "number"
+        },
+        "propertyName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "propertyKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "additive": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

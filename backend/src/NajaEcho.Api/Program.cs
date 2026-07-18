@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using NajaEcho.Api.Authorization;
 using NajaEcho.Api.Common;
 using NajaEcho.Api.Features.Auth;
+using NajaEcho.Api.Features.Admin.Blueprints;
 using NajaEcho.Api.Features.Admin.Commodities;
 using NajaEcho.Api.Features.Admin.Items;
 using NajaEcho.Api.Features.Admin.Locations;
@@ -264,6 +265,7 @@ try
     app.MapLocationAdminEndpoints();
     app.MapItemAdminEndpoints();
     app.MapCommodityAdminEndpoints();
+    app.MapBlueprintAdminEndpoints();
     app.MapCharacterEndpoints();
     app.MapHangarEndpoints();
     app.MapWarehouseEndpoints();

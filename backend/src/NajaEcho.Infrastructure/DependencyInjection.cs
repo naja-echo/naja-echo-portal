@@ -4,6 +4,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NajaEcho.Application.Abstractions;
 using NajaEcho.Application.Features.Auth.GetCurrentUser;
+using NajaEcho.Application.Features.Blueprints.GetBlueprints;
+using NajaEcho.Application.Features.Blueprints.ImportBlueprints;
 using NajaEcho.Application.Features.Auth.SignInWithDiscord;
 using NajaEcho.Application.Features.Hangar.AddShipToHangar;
 using NajaEcho.Application.Features.Hangar.GetMyHangar;
@@ -52,6 +54,7 @@ using NajaEcho.Application.Features.Warehouse.GetLocations;
 using NajaEcho.Application.Features.Warehouse.TransferInventoryItem;
 using NajaEcho.Application.Features.Warehouse.Materials.TransferMaterial;
 using NajaEcho.Application.Features.Warehouse.Materials.UpdateMaterial;
+using NajaEcho.Infrastructure.Blueprints;
 using NajaEcho.Infrastructure.Characters;
 using NajaEcho.Infrastructure.Commodities;
 using NajaEcho.Infrastructure.Hangar;
@@ -211,6 +214,11 @@ public static class DependencyInjection
         services.AddScoped<GetDistributionHandler>();
         services.AddScoped<AddOrgPointsHandler>();
         services.AddScoped<AddLootPointsHandler>();
+
+        // Crafting Blueprints
+        services.AddScoped<IBlueprintRepository, BlueprintRepository>();
+        services.AddScoped<ImportBlueprintsHandler>();
+        services.AddScoped<GetBlueprintsHandler>();
 
         return services;
     }

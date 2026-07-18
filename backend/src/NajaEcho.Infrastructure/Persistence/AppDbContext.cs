@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using NajaEcho.Domain.Blueprints;
 using NajaEcho.Domain.Characters;
 using NajaEcho.Domain.Commodities;
 using NajaEcho.Domain.Hangar;
@@ -34,6 +35,12 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<City> Cities => Set<City>();
     public DbSet<LootLedgerEntry> LootLedger => Set<LootLedgerEntry>();
     public DbSet<LootMemberStanding> LootMemberStandings => Set<LootMemberStanding>();
+    public DbSet<CraftingBlueprint> Blueprints => Set<CraftingBlueprint>();
+    public DbSet<CraftingBlueprintTier> BlueprintTiers => Set<CraftingBlueprintTier>();
+    public DbSet<CraftingBlueprintSlotOption> BlueprintSlotOptions => Set<CraftingBlueprintSlotOption>();
+    public DbSet<CraftingMaterial> CraftingMaterials => Set<CraftingMaterial>();
+    public DbSet<CraftingProperty> CraftingProperties => Set<CraftingProperty>();
+    public DbSet<CraftingDataset> CraftingDatasets => Set<CraftingDataset>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -56,5 +63,11 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         modelBuilder.ApplyConfiguration(new CityConfiguration());
         modelBuilder.ApplyConfiguration(new LootLedgerEntryConfiguration());
         modelBuilder.ApplyConfiguration(new LootMemberStandingConfiguration());
+        modelBuilder.ApplyConfiguration(new CraftingBlueprintConfiguration());
+        modelBuilder.ApplyConfiguration(new CraftingBlueprintTierConfiguration());
+        modelBuilder.ApplyConfiguration(new CraftingBlueprintSlotOptionConfiguration());
+        modelBuilder.ApplyConfiguration(new CraftingMaterialConfiguration());
+        modelBuilder.ApplyConfiguration(new CraftingPropertyConfiguration());
+        modelBuilder.ApplyConfiguration(new CraftingDatasetConfiguration());
     }
 }
