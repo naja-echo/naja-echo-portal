@@ -15,6 +15,7 @@ using NajaEcho.Api.Features.Admin.Ships;
 using NajaEcho.Api.Features.Admin.Users;
 using NajaEcho.Api.Features.Characters;
 using NajaEcho.Api.Features.Hangar;
+using NajaEcho.Api.Features.Loot;
 using NajaEcho.Api.Features.Warehouse;
 using NajaEcho.Application.Features.Auth.SignInWithDiscord;
 using NajaEcho.Domain.Users;
@@ -266,6 +267,7 @@ try
     app.MapCharacterEndpoints();
     app.MapHangarEndpoints();
     app.MapWarehouseEndpoints();
+    app.MapLootEndpoints();
 
     app.Run();
 }

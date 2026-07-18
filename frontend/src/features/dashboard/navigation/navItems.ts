@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { Database, LayoutDashboard, Package, Ship, Users } from 'lucide-react'
+import { BarChart2, Coins, Database, LayoutDashboard, Package, Ship, Users } from 'lucide-react'
 
 export interface NavItem {
   label: string
@@ -17,6 +17,8 @@ export const navItems: NavItem[] = [
   { label: 'Items', path: '/warehouse/items', icon: Package, group: 'Warehouse' },
   { label: 'Ship Components', path: '/warehouse/ship-components', icon: Package, group: 'Warehouse' },
   { label: 'Materials', path: '/warehouse/materials', icon: Package, group: 'Warehouse' },
+  { label: 'My Loot', path: '/crew-resources/my-loot', icon: Coins, group: 'Crew Resources' },
+  { label: 'Loot Distribution', path: '/crew-resources/loot-distribution', icon: BarChart2, group: 'Crew Resources' },
   {
     label: 'Users',
     path: '/dashboard/admin/users',

@@ -58,7 +58,7 @@ export function EditInventoryDialog({ open, onOpenChange, row, onSuccess }: Prop
           <DialogTitle>Edit Item</DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4 px-6 py-2">
+        <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <label htmlFor="edit-item-owner" className="text-sm font-medium">
               Owner

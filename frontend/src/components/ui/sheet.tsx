@@ -38,7 +38,7 @@ const SheetContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed z-50 flex flex-col bg-card shadow-lg',
+        'fixed z-50 flex flex-col bg-card shadow-lg p-6',
         'transition-transform duration-300',
         side === 'left' && 'inset-y-0 left-0 w-72 border-r border-border',
         side === 'right' && 'inset-y-0 right-0 w-72 border-l border-border',
@@ -59,7 +59,7 @@ const SheetContent = React.forwardRef<
 SheetContent.displayName = DialogPrimitive.Content.displayName
 
 const SheetHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn('flex flex-col space-y-1.5 p-6', className)} {...props} />
+  <div className={cn('flex flex-col space-y-1.5', className)} {...props} />
 )
 SheetHeader.displayName = 'SheetHeader'
 

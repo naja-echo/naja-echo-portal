@@ -9,7 +9,7 @@ public sealed class AssignRolesHandler(
     ILogger<AssignRolesHandler> logger)
 {
     private static readonly IReadOnlySet<string> ValidRoles =
-        new HashSet<string>(StringComparer.Ordinal) { "Admin", "Quartermaster" };
+        new HashSet<string>(StringComparer.Ordinal) { "Admin", "Quartermaster", "CrewResourceOfficer" };
 
     public async Task HandleAsync(AssignRolesCommand command, CancellationToken ct)
     {

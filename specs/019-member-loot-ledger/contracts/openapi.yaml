@@ -1,0 +1,252 @@
+openapi: 3.0.3
+info:
+  title: NajaEchoPortal — Member Loot Ledger API
+  version: 1.0.0
+  description: >
+    Feature 019. Member OrgPoints / LootPoints immutable ledgers and computed Claim Priority.
+    All endpoints require an authenticated browser session (cookie auth). Reads are open to any
+    authenticated member; writes are gated by role. New endpoints only — no existing contract
+    changes.
+
+servers:
+  - url: /
+
+paths:
+  /api/loot/distribution:
+    get:
+      operationId: getLootDistribution
+      summary: All members with computed totals and Claim Priority
+      description: >
+        Returns one row per member account (including members with no ledger entries), sorted by
+        Claim Priority ascending (lowest ratio = highest priority first). No pagination — all
+        members are returned. Any authenticated member may call this.
+      tags: [Loot]
+      responses:
+        '200':
+          description: All-member distribution table.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LootDistributionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/loot/me:
+    get:
+      operationId: getMyLoot
+      summary: The authenticated member's own ledgers and Claim Priority
+      tags: [Loot]
+      responses:
+        '200':
+          description: The caller's OrgPoints ledger, LootPoints ledger, totals, and Claim Priority.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberLedgerResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/loot/{userId}:
+    get:
+      operationId: getMemberLoot
+      summary: Full ledger for a specific member
+      description: Any authenticated member may view any member's ledger (transparency principle).
+      tags: [Loot]
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: The target member's OrgPoints ledger, LootPoints ledger, totals, and Claim Priority.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberLedgerResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/loot/{userId}/org-points:
+    post:
+      operationId: addOrgPointsEntry
+      summary: Post an OrgPoints entry for a member (Crew Resource Officer or Admin)
+      description: >
+        Adds an immutable OrgPoints ledger entry. Requires the CrewResourceOfficer or Admin role.
+        Amount is a signed whole integer; reason is required and non-empty.
+      tags: [Loot]
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddLedgerEntryRequest'
+      responses:
+        '201':
+          description: The created OrgPoints entry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LedgerEntry'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/loot/{userId}/loot-points:
+    post:
+      operationId: addLootPointsEntry
+      summary: Award a LootPoints entry for a member (Quartermaster or Admin)
+      description: >
+        Adds an immutable LootPoints ledger entry. Requires the Quartermaster or Admin role.
+        Amount is a signed whole integer (negative entries are corrections); reason is required.
+      tags: [Loot]
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddLedgerEntryRequest'
+      responses:
+        '201':
+          description: The created LootPoints entry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LedgerEntry'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+components:
+  parameters:
+    UserId:
+      name: userId
+      in: path
+      required: true
+      description: The member (AspNetUsers id) the ledger entry belongs to.
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Unauthorized:
+      description: No authenticated session.
+    Forbidden:
+      description: Authenticated but lacking the required role.
+    NotFound:
+      description: The target member does not exist.
+    BadRequest:
+      description: Malformed request body.
+    ValidationError:
+      description: Body failed validation (empty reason, non-integer amount).
+
+  schemas:
+    LootDistributionResponse:
+      type: object
+      required: [members]
+      properties:
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/DistributionRow'
+
+    DistributionRow:
+      type: object
+      required: [memberId, displayName, orgPointsTotal, lootPointsTotal, claimPriority]
+      properties:
+        memberId:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+          description: Character name when registered, otherwise Discord display name.
+        orgPointsTotal:
+          type: integer
+          description: Sum of all OrgPoints entries (may be negative).
+        lootPointsTotal:
+          type: integer
+          description: Sum of all LootPoints entries (may be negative).
+        claimPriority:
+          type: number
+          format: double
+          description: >
+            orgPointsTotal / (lootPointsTotal or 100 when lootPointsTotal is 0). Raw value;
+            the client displays to 2 decimal places.
+
+    MemberLedgerResponse:
+      type: object
+      required: [memberId, displayName, orgPoints, lootPoints, orgPointsTotal, lootPointsTotal, claimPriority]
+      properties:
+        memberId:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        orgPoints:
+          type: array
+          description: OrgPoints entries, newest first.
+          items:
+            $ref: '#/components/schemas/LedgerEntry'
+        lootPoints:
+          type: array
+          description: LootPoints entries, newest first.
+          items:
+            $ref: '#/components/schemas/LedgerEntry'
+        orgPointsTotal:
+          type: integer
+        lootPointsTotal:
+          type: integer
+        claimPriority:
+          type: number
+          format: double
+
+    LedgerEntry:
+      type: object
+      required: [id, amount, reason, postedBy, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        amount:
+          type: integer
+          description: Signed whole integer (positive credit, negative debit).
+        reason:
+          type: string
+        postedBy:
+          type: string
+          description: >
+            Display name of the actor who posted the entry (character name, falling back to Discord
+            display name).
+        createdAt:
+          type: string
+          format: date-time
+
+    AddLedgerEntryRequest:
+      type: object
+      required: [amount, reason]
+      properties:
+        amount:
+          type: integer
+          description: Signed whole integer. Non-integer values are rejected.
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Required, non-empty.

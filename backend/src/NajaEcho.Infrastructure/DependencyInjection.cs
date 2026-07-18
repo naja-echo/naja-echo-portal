@@ -44,6 +44,10 @@ using NajaEcho.Application.Features.Characters.GetRegistration;
 using NajaEcho.Application.Features.Characters.StartRegistration;
 using NajaEcho.Application.Features.Characters.VerifyCharacter;
 using NajaEcho.Application.Features.Locations.ImportLocations;
+using NajaEcho.Application.Features.Loot.AddLootPoints;
+using NajaEcho.Application.Features.Loot.AddOrgPoints;
+using NajaEcho.Application.Features.Loot.GetDistribution;
+using NajaEcho.Application.Features.Loot.GetMemberLedger;
 using NajaEcho.Application.Features.Warehouse.GetLocations;
 using NajaEcho.Application.Features.Warehouse.TransferInventoryItem;
 using NajaEcho.Application.Features.Warehouse.Materials.TransferMaterial;
@@ -51,6 +55,8 @@ using NajaEcho.Application.Features.Warehouse.Materials.UpdateMaterial;
 using NajaEcho.Infrastructure.Characters;
 using NajaEcho.Infrastructure.Commodities;
 using NajaEcho.Infrastructure.Hangar;
+using NajaEcho.Infrastructure.Loot;
+using NajaEcho.Infrastructure.Loot;
 using NajaEcho.Infrastructure.Identity;
 using NajaEcho.Infrastructure.Imports;
 using NajaEcho.Infrastructure.ItemCategories;
@@ -196,8 +202,15 @@ public static class DependencyInjection
         services.AddScoped<VerifyCharacterHandler>();
         services.AddScoped<GetCharactersHandler>();
 
-        // Role seeder (Admin + Quartermaster)
+        // Role seeder (Admin + Quartermaster + CrewResourceOfficer)
         services.AddScoped<RoleSeeder>();
+
+        // Loot Ledger
+        services.AddScoped<ILootLedgerRepository, LootLedgerRepository>();
+        services.AddScoped<GetMemberLedgerHandler>();
+        services.AddScoped<GetDistributionHandler>();
+        services.AddScoped<AddOrgPointsHandler>();
+        services.AddScoped<AddLootPointsHandler>();
 
         return services;
     }

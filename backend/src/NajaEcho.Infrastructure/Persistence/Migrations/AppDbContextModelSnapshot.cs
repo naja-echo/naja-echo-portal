@@ -1007,6 +1007,87 @@ namespace NajaEcho.Infrastructure.Persistence.Migrations
                     b.ToTable("star_systems", "sc");
                 });
 
+            modelBuilder.Entity("NajaEcho.Domain.Loot.LootLedgerEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("actor_id");
+
+                    b.Property<int>("Amount")
+                        .HasColumnType("integer")
+                        .HasColumnName("amount");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("kind");
+
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("member_id");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.HasKey("Id")
+                        .HasName("pk_loot_ledger");
+
+                    b.HasIndex("ActorId")
+                        .HasDatabaseName("ix_loot_ledger_actor_id");
+
+                    b.HasIndex("MemberId", "Kind", "CreatedAt")
+                        .IsDescending(false, false, true)
+                        .HasDatabaseName("ix_loot_ledger_member_kind_created");
+
+                    b.ToTable("loot_ledger", "public", t =>
+                        {
+                            t.HasCheckConstraint("ck_loot_ledger_kind", "kind IN ('OrgPoints', 'LootPoints')");
+
+                            t.HasCheckConstraint("ck_loot_ledger_reason", "length(btrim(reason)) >= 1");
+                        });
+                });
+
+            modelBuilder.Entity("NajaEcho.Domain.Loot.LootMemberStanding", b =>
+                {
+                    b.Property<double>("ClaimPriority")
+                        .HasColumnType("double precision")
+                        .HasColumnName("claim_priority");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("display_name");
+
+                    b.Property<int>("LootPointsTotal")
+                        .HasColumnType("integer")
+                        .HasColumnName("loot_points_total");
+
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("member_id");
+
+                    b.Property<int>("OrgPointsTotal")
+                        .HasColumnType("integer")
+                        .HasColumnName("org_points_total");
+
+                    b.ToTable((string)null);
+
+                    b.ToView("loot_member_standing", "public");
+                });
+
             modelBuilder.Entity("NajaEcho.Domain.Ships.Ship", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1523,6 +1604,23 @@ namespace NajaEcho.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_space_stations_star_systems_star_system_id");
 
                     b.Navigation("StarSystem");
+                });
+
+            modelBuilder.Entity("NajaEcho.Domain.Loot.LootLedgerEntry", b =>
+                {
+                    b.HasOne("NajaEcho.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("ActorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_loot_ledger_actor_id");
+
+                    b.HasOne("NajaEcho.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_loot_ledger_member_id");
                 });
 
             modelBuilder.Entity("NajaEcho.Domain.Warehouse.ItemAttribute", b =>

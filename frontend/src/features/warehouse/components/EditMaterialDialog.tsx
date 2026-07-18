@@ -58,7 +58,7 @@ export function EditMaterialDialog({ open, onOpenChange, row, onSuccess }: Props
           <DialogTitle>Edit Material</DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4 px-6 py-2">
+        <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <label htmlFor="edit-material-owner" className="text-sm font-medium">
               Owner
