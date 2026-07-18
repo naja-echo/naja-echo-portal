@@ -44,7 +44,7 @@ public sealed class LootEndpointsTests : IClassFixture<WebApplicationFactory<Pro
 
             b.ConfigureTestServices(services =>
             {
-                services.ReplaceWithInMemoryDb("LootTestDb_" + Guid.NewGuid());
+                services.StubDatabase();
 
                 services.RemoveAll<IExternalLoginService>();
                 services.AddSingleton<IExternalLoginService, LootFakeLoginService>();

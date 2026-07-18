@@ -42,7 +42,7 @@ public class CommodityAdminEndpointsTests : IClassFixture<WebApplicationFactory<
 
             b.ConfigureTestServices(services =>
             {
-                services.ReplaceWithInMemoryDb("CommodityApiTestDb_" + Guid.NewGuid());
+                services.StubDatabase();
 
                 services.RemoveAll<IExternalLoginService>();
                 services.AddSingleton<IExternalLoginService, FakeCommodityTestLoginService>();

@@ -45,7 +45,7 @@ public sealed class ShipComponentsEndpointTests : IClassFixture<WebApplicationFa
 
             b.ConfigureTestServices(services =>
             {
-                services.ReplaceWithInMemoryDb("ScTestDb_" + Guid.NewGuid());
+                services.StubDatabase();
 
                 services.RemoveAll<IExternalLoginService>();
                 services.AddSingleton<IExternalLoginService, ScFakeLoginService>();

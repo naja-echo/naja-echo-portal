@@ -44,7 +44,7 @@ public class ShipAdminEndpointsTests : IClassFixture<WebApplicationFactory<Progr
 
             b.ConfigureTestServices(services =>
             {
-                services.ReplaceWithInMemoryDb("ShipApiTestDb_" + Guid.NewGuid());
+                services.StubDatabase();
 
                 services.RemoveAll<IExternalLoginService>();
                 services.AddSingleton<IExternalLoginService, FakeShipExternalLoginService>();

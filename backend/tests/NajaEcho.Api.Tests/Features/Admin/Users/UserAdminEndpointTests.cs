@@ -45,7 +45,7 @@ public sealed class UserAdminEndpointTests : IClassFixture<WebApplicationFactory
 
             b.ConfigureTestServices(services =>
             {
-                services.ReplaceWithInMemoryDb("UserAdminTestDb_" + Guid.NewGuid());
+                services.StubDatabase();
 
                 services.RemoveAll<IExternalLoginService>();
                 services.AddSingleton<IExternalLoginService, UserAdminFakeLoginService>();

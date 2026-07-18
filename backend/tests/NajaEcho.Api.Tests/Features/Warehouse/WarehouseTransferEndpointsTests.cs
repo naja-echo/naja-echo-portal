@@ -48,7 +48,7 @@ public sealed class WarehouseTransferEndpointsTests : IClassFixture<WebApplicati
 
             b.ConfigureTestServices(services =>
             {
-                services.ReplaceWithInMemoryDb("TransferTestDb_" + Guid.NewGuid());
+                services.StubDatabase();
 
                 services.RemoveAll<IExternalLoginService>();
                 services.AddSingleton<IExternalLoginService, TransferFakeLoginService>();

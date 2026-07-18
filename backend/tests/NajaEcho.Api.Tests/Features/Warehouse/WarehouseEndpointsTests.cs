@@ -50,7 +50,7 @@ public sealed class WarehouseEndpointsTests : IClassFixture<WebApplicationFactor
 
             b.ConfigureTestServices(services =>
             {
-                services.ReplaceWithInMemoryDb("WarehouseTestDb_" + Guid.NewGuid());
+                services.StubDatabase();
 
                 services.RemoveAll<IExternalLoginService>();
                 services.AddSingleton<IExternalLoginService, WarehouseFakeLoginService>();
@@ -59,7 +59,6 @@ public sealed class WarehouseEndpointsTests : IClassFixture<WebApplicationFactor
                 services.AddSingleton<FakeWarehouseRepo>();
                 services.AddSingleton<IWarehouseInventoryRepository>(sp => sp.GetRequiredService<FakeWarehouseRepo>());
 
-                // Keep IItemRepository and IUserRepository from real DI (in-memory won't hit DB)
                 services.RemoveAll<IItemRepository>();
                 services.AddSingleton<IItemRepository, WarehouseFakeItemRepo>();
 

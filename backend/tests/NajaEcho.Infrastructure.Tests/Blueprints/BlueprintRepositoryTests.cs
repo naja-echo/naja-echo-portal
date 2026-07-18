@@ -6,37 +6,25 @@ using NajaEcho.Domain.Blueprints;
 using NajaEcho.Domain.Items;
 using NajaEcho.Infrastructure.Blueprints;
 using NajaEcho.Infrastructure.Persistence;
-using Testcontainers.PostgreSql;
 using Xunit;
 
 namespace NajaEcho.Infrastructure.Tests.Blueprints;
 
+[Collection(PostgresCollection.Name)]
 public sealed class BlueprintRepositoryTests : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _pg = new PostgreSqlBuilder()
-        .WithDatabase("najaecho_test")
-        .WithUsername("test")
-        .WithPassword("test")
-        .Build();
-
+    private readonly PostgresFixture _fixture;
     private AppDbContext _db = null!;
+
+    public BlueprintRepositoryTests(PostgresFixture fixture) => _fixture = fixture;
 
     public async Task InitializeAsync()
     {
-        await _pg.StartAsync();
-        var opts = new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql(_pg.GetConnectionString())
-            .UseSnakeCaseNamingConvention()
-            .Options;
-        _db = new AppDbContext(opts);
-        await _db.Database.MigrateAsync();
+        await _fixture.ResetAsync();
+        _db = _fixture.CreateContext();
     }
 
-    public async Task DisposeAsync()
-    {
-        await _db.DisposeAsync();
-        await _pg.DisposeAsync();
-    }
+    public async Task DisposeAsync() => await _db.DisposeAsync();
 
     private BlueprintRepository MakeRepo() => new(_db);
 
@@ -52,7 +40,7 @@ public sealed class BlueprintRepositoryTests : IAsyncLifetime
     // Each import runs in its own context, mirroring the per-request scoped DbContext in production.
     private async Task<Application.Abstractions.BlueprintImportCounts> ImportFresh(ParsedBlueprintDataset dataset)
     {
-        await using var ctx = NewContext(_pg.GetConnectionString());
+        await using var ctx = NewContext(_fixture.ConnectionString);
         return await new BlueprintRepository(ctx).ImportAsync(dataset);
     }
 
@@ -160,7 +148,7 @@ public sealed class BlueprintRepositoryTests : IAsyncLifetime
         var counts = await repo.ImportAsync(dataset);
         counts.BlueprintsInserted.Should().Be(1);
 
-        using var verify = NewContext(_pg.GetConnectionString());
+        using var verify = NewContext(_fixture.ConnectionString);
         (await verify.Blueprints.CountAsync()).Should().Be(1);
         (await verify.BlueprintTiers.CountAsync()).Should().Be(1);
         (await verify.BlueprintSlotOptions.CountAsync()).Should().Be(2);
@@ -211,7 +199,7 @@ public sealed class BlueprintRepositoryTests : IAsyncLifetime
         counts.BlueprintsInserted.Should().Be(1);
         counts.BlueprintsUpdated.Should().Be(1);
 
-        using var verify = NewContext(_pg.GetConnectionString());
+        using var verify = NewContext(_fixture.ConnectionString);
         (await verify.Blueprints.CountAsync()).Should().Be(2);
 
         // The updated blueprint reflects only file B (500s craft time, single Gold option) — no stale rows.
@@ -239,7 +227,7 @@ public sealed class BlueprintRepositoryTests : IAsyncLifetime
 
         int priorBlueprintCount;
         int priorMaterialCount;
-        using (var pre = NewContext(_pg.GetConnectionString()))
+        using (var pre = NewContext(_fixture.ConnectionString))
         {
             priorBlueprintCount = await pre.Blueprints.CountAsync();
             priorMaterialCount = await pre.CraftingMaterials.CountAsync();
@@ -252,7 +240,7 @@ public sealed class BlueprintRepositoryTests : IAsyncLifetime
         var act = () => ImportFresh(failing);
         await act.Should().ThrowAsync<Exception>();
 
-        using var verify = NewContext(_pg.GetConnectionString());
+        using var verify = NewContext(_fixture.ConnectionString);
         (await verify.Blueprints.CountAsync()).Should().Be(priorBlueprintCount);
         (await verify.CraftingMaterials.CountAsync()).Should().Be(priorMaterialCount);
         (await verify.Blueprints.AnyAsync(b => b.Id == Guid.Parse(Guid2))).Should().BeFalse();

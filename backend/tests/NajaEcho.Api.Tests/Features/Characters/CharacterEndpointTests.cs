@@ -42,7 +42,7 @@ public sealed class CharacterEndpointTests : IClassFixture<WebApplicationFactory
 
             b.ConfigureTestServices(services =>
             {
-                services.ReplaceWithInMemoryDb("CharacterTestDb_" + Guid.NewGuid());
+                services.StubDatabase();
 
                 services.RemoveAll<IExternalLoginService>();
                 services.AddSingleton<IExternalLoginService, CharFakeLoginService>();

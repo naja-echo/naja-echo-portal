@@ -7,54 +7,30 @@ using NajaEcho.Domain.Characters;
 using NajaEcho.Infrastructure.Characters;
 using NajaEcho.Infrastructure.Identity;
 using NajaEcho.Infrastructure.Persistence;
-using Testcontainers.PostgreSql;
 using Xunit;
 
 namespace NajaEcho.Infrastructure.Tests.Identity;
 
+[Collection(PostgresCollection.Name)]
 public sealed class UserRepositoryIntegrationTests : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _pg = new PostgreSqlBuilder()
-        .WithDatabase("najaecho_test")
-        .WithUsername("test")
-        .WithPassword("test")
-        .Build();
-
+    private readonly PostgresFixture _fixture;
     private ServiceProvider _serviceProvider = null!;
     private AppDbContext _db = null!;
 
+    public UserRepositoryIntegrationTests(PostgresFixture fixture) => _fixture = fixture;
+
     public async Task InitializeAsync()
     {
-        await _pg.StartAsync();
-
-        var services = new ServiceCollection();
-        services.AddLogging();
-        services.AddDbContext<AppDbContext>(opts =>
-            opts.UseNpgsql(_pg.GetConnectionString())
-                .UseSnakeCaseNamingConvention());
-        services.AddIdentityCore<ApplicationUser>()
-            .AddRoles<IdentityRole<Guid>>()
-            .AddEntityFrameworkStores<AppDbContext>();
-
-        _serviceProvider = services.BuildServiceProvider();
-
-        using var scope = _serviceProvider.CreateScope();
-        _db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await _db.Database.MigrateAsync();
-
-        // Keep a long-lived DbContext for direct seeding
-        var opts = new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql(_pg.GetConnectionString())
-            .UseSnakeCaseNamingConvention()
-            .Options;
-        _db = new AppDbContext(opts);
+        await _fixture.ResetAsync();
+        _serviceProvider = _fixture.BuildIdentityProvider();
+        _db = _fixture.CreateContext();
     }
 
     public async Task DisposeAsync()
     {
         await _serviceProvider.DisposeAsync();
         await _db.DisposeAsync();
-        await _pg.DisposeAsync();
     }
 
     private ApplicationUser AddUser(string name = "Test")

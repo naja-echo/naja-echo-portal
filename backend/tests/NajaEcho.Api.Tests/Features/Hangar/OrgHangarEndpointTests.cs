@@ -42,7 +42,7 @@ public sealed class OrgHangarEndpointTests : IClassFixture<WebApplicationFactory
 
             b.ConfigureTestServices(services =>
             {
-                services.ReplaceWithInMemoryDb("OrgHangarTestDb_" + Guid.NewGuid());
+                services.StubDatabase();
 
                 services.RemoveAll<IExternalLoginService>();
                 services.AddSingleton<IExternalLoginService, FakeHangarLoginService>();
