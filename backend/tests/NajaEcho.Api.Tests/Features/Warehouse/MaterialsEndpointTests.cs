@@ -45,7 +45,7 @@ public sealed class MaterialsEndpointTests : IClassFixture<WebApplicationFactory
 
             b.ConfigureTestServices(services =>
             {
-                services.ReplaceWithInMemoryDb("MaterialsTestDb_" + Guid.NewGuid());
+                services.StubDatabase();
 
                 services.RemoveAll<IExternalLoginService>();
                 services.AddSingleton<IExternalLoginService, MaterialsFakeLoginService>();

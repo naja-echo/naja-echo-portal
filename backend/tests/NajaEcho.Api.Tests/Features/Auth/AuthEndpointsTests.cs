@@ -43,8 +43,8 @@ public class AuthEndpointsTests : IClassFixture<WebApplicationFactory<Program>>
 
             b.ConfigureTestServices(services =>
             {
-                // Replace real DB with in-memory (Identity stores remain, using same context)
-                services.ReplaceWithInMemoryDb("ApiTestDb");
+                // No database needed — endpoints use faked repositories (see StubDatabase)
+                services.StubDatabase();
 
                 // Fake external login service
                 services.RemoveAll<IExternalLoginService>();

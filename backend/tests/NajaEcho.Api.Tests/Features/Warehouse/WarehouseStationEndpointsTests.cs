@@ -37,7 +37,7 @@ public sealed class WarehouseLocationEndpointsTests : IClassFixture<WebApplicati
 
             b.ConfigureTestServices(services =>
             {
-                services.ReplaceWithInMemoryDb("LocationEndpointTestDb_" + Guid.NewGuid());
+                services.StubDatabase();
 
                 services.RemoveAll<IExternalLoginService>();
                 services.AddSingleton<IExternalLoginService, LocationEndpointFakeLoginService>();

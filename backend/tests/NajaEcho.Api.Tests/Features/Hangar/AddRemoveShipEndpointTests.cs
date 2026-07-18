@@ -41,7 +41,7 @@ public sealed class AddRemoveShipEndpointTests : IClassFixture<WebApplicationFac
 
             b.ConfigureTestServices(services =>
             {
-                services.ReplaceWithInMemoryDb("AddRemoveTestDb_" + Guid.NewGuid());
+                services.StubDatabase();
 
                 services.RemoveAll<IExternalLoginService>();
                 services.AddSingleton<IExternalLoginService, FakeHangarLoginService>();

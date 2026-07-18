@@ -61,7 +61,7 @@ public class BlueprintAdminEndpointsTests : IClassFixture<WebApplicationFactory<
 
             b.ConfigureTestServices(services =>
             {
-                services.ReplaceWithInMemoryDb("BlueprintApiTestDb_" + Guid.NewGuid());
+                services.StubDatabase();
 
                 services.RemoveAll<IExternalLoginService>();
                 services.AddSingleton<IExternalLoginService, FakeBlueprintLoginService>();

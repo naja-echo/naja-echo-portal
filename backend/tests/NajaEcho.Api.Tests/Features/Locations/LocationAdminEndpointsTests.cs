@@ -42,7 +42,7 @@ public sealed class LocationAdminEndpointsTests : IClassFixture<WebApplicationFa
 
             b.ConfigureTestServices(services =>
             {
-                services.ReplaceWithInMemoryDb("LocationApiTestDb_" + Guid.NewGuid());
+                services.StubDatabase();
 
                 services.RemoveAll<IExternalLoginService>();
                 services.AddSingleton<IExternalLoginService, LocationFakeLoginService>();
