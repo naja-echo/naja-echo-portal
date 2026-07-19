@@ -1,18 +1,40 @@
 # Board mechanics & field reference
 
-The durable narrative lives in `specs/ROADMAP.md` — read it at the start of a
-session for current epic status and cadence rules. This file is the *operational*
-reference: exact field semantics and the `board.sh` command surface.
+This is the *operational* reference: exact type/field semantics and the `board.sh`
+command surface. The model itself is summarized in `SKILL.md` and, for humans, in
+`specs/ROADMAP.md`. **The board is the source of truth for live state** — read it
+(don't rely on a doc) for what themes/features exist and where they sit.
 
 ## The board
 
 - **Project:** [Naja Echo Planning](https://github.com/orgs/Deceptively-Clever/projects/3), org `Deceptively-Clever`, project #3.
 - **Repo issues live in:** `Deceptively-Clever/naja-echo-portal`.
-- Group the board by the **`Readiness`** field (not the built-in `Status`).
+- **Views:** a **Pipeline** view (board layout, filtered to issue types Feature and
+  Bug, grouped by **Readiness**) is the day-to-day kanban; a **Roadmap** view (grouped
+  by **Parent issue**, surfacing the built-in **Sub-issues progress** field) shows the
+  Theme → Epic → Feature hierarchy with rollup %. Both filters/groupings are set in the
+  view UI — confirm the exact type filter there rather than assuming a query string.
 
-## Two custom fields carry all structure
+## Structure = native issue types + sub-issues (not a custom field)
 
-**`Readiness`** — the pipeline / kanban columns:
+The hierarchy is carried entirely by GitHub **issue types** and **sub-issue** links:
+
+| Type | Role | Readiness? |
+|------|------|-----------|
+| **Theme** | major capability area, long-lived | no |
+| **Epic** | bounded initiative, one finish line (only when 3+ features) | no |
+| **Feature** | one `specs/NNN-` + branch + PR | **yes** |
+| **Task** | `tasks.md` item | (usually off-board) |
+| **Bug** | defect | **yes** |
+
+- **Parent/child** = native **sub-issue** link → progress rolls up automatically.
+- **Cross-theme dependency** = native **blocked-by** link.
+- There is **no `Epic` custom field** — issue type + parent replace it.
+
+## The one custom field: `Readiness`
+
+Pipeline / kanban columns. Set on **Features and Bugs only**; leave empty on
+Themes/Epics (they roll up).
 
 | Value | Meaning | Skill sets this when… |
 |-------|---------|----------------------|
@@ -22,33 +44,24 @@ reference: exact field semantics and the `board.sh` command surface.
 | Spec'd | spec.md + plan.md exist | (set by Spec Kit flow, not this skill) |
 | Building / In Review / Done | branch / PR / merged | (set during execution) |
 
-This skill only ever lands items at **Idea**, **Shaped**, or **Ready**. Handing a
-Ready item to `/speckit-specify` is the downstream boundary.
-
-**`Epic`** — capability area. Options: Identity & Access · Hangar & Fleet ·
-Warehouse & Inventory · Org Economy · Crafting · Discord Integration Service.
-(Closed/archived epics like *App Shell / UX* are intentionally absent — the board
-holds present + future work only.)
-
-## Structural links (native GitHub, not fields)
-
-- **Epic** = a `[Epic] Name` tracking issue. Features attach as **sub-issues** so
-  epic progress rolls up automatically.
-- **Cross-epic dependency** = native **blocked-by** link.
+This skill only ever lands items at **Idea**, **Shaped**, or **Ready**.
 
 ## board.sh command surface
 
 `scripts/board.sh` resolves project/field/option IDs live (never stale) and
-fuzzy-matches option names case-insensitively.
+fuzzy-matches Readiness option names case-insensitively.
 
 ```bash
-board.sh show                                          # list Epic + Readiness option names
-board.sh place  <issue> --epic "Crafting" --readiness "Shaped"
-board.sh readiness <issue> "Ready"                     # update one field
-board.sh epic      <issue> "Warehouse"                 # fuzzy match ok
-board.sh new-epic  "Logistics"                         # opens [Epic] Logistics tracking issue
-board.sh attach    <feature> <epic>                    # feature -> sub-issue of epic
-board.sh blocked-by <issue> <blocker>                  # add blocked-by link
+board.sh show                                      # issue types + Readiness options
+board.sh themes                                    # existing Theme/Epic issues (for parenting)
+board.sh add Feature "Low-stock alerts" --readiness "Shaped" --parent 16   # create + place + set, one shot
+board.sh new-theme "Warehouse & Inventory"         # create a Theme + add to board
+board.sh new-epic  "Discord Service v1"            # create an Epic + add to board
+board.sh place <issue> [--readiness "Shaped"] [--parent <n>]   # place an EXISTING issue / set fields
+board.sh readiness <issue> "Ready"                 # update readiness only
+board.sh type      <issue> "Feature"               # (re)set issue type
+board.sh parent    <child> <parent>                # child becomes a sub-issue of parent
+board.sh blocked-by <issue> <blocker>              # add blocked-by link
 ```
 
 `<issue>` accepts `123`, `#123`, or a full URL. `place` adds the issue to the
@@ -56,12 +69,11 @@ project if it isn't already on the board.
 
 ## Two CLI limits to know
 
-- **New Epic option:** `board.sh new-epic` opens the tracking *issue*, but GitHub's
-  CLI can't add a new **option** to the `Epic` single-select field. After creating a
-  brand-new epic, tell the user to add the matching option in the board UI
-  (Project settings → Epic field), then re-run `board.sh epic <feature> "<Name>"`.
-- The built-in `Status` field is likewise not CLI-editable — that's *why* the
-  pipeline lives in the dedicated `Readiness` field. Never try to set `Status`.
+- **Issue types are org-level.** `Theme`/`Epic`/`Feature`/`Task`/`Bug` already exist
+  on the org and are set per-issue with `gh issue edit --type`. Creating a *brand-new
+  type* (rare) is done in **org settings → Issue types**, not the CLI.
+- **The built-in `Status` field is not CLI-editable** — that's why the pipeline lives
+  in the dedicated `Readiness` field. Never try to set `Status`.
 
 ---
 
@@ -99,6 +111,8 @@ idea is thin. Ask in **small batches** (2–4 questions), never a wall.
   first feature to pull to Ready.
 - **INVEST** test on each candidate feature: Independent, Negotiable, Valuable,
   Estimable, Small, Testable. Fails Small/Independent → split further.
+- **Epic vs flat:** if the slices are 3+ features toward one finish line, wrap them in
+  an **Epic**; otherwise parent them straight under the Theme.
 
 ## Completeness sweep (the things ideas forget)
 Edge cases · error & empty states · non-functional needs (perf, security,
