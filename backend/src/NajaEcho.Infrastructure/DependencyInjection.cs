@@ -38,6 +38,8 @@ using NajaEcho.Application.Features.Warehouse.UpdateInventoryItem;
 using NajaEcho.Application.Features.Warehouse.ShipComponents.GetShipComponentFilters;
 using NajaEcho.Application.Features.Warehouse.ShipComponents.GetShipComponents;
 using NajaEcho.Application.Features.Warehouse.ShipComponents.SearchSystemsCatalog;
+using NajaEcho.Application.Features.Admin.Organizations.AssignOrganization;
+using NajaEcho.Application.Features.Admin.Organizations.GetOrganizations;
 using NajaEcho.Application.Features.Admin.Users.AddCharacterForUser;
 using NajaEcho.Application.Features.Admin.Users.AssignRoles;
 using NajaEcho.Application.Features.Admin.Users.GetUsers;
@@ -58,6 +60,7 @@ using NajaEcho.Infrastructure.Blueprints;
 using NajaEcho.Infrastructure.Characters;
 using NajaEcho.Infrastructure.Commodities;
 using NajaEcho.Infrastructure.Hangar;
+using NajaEcho.Infrastructure.Organizations;
 using NajaEcho.Infrastructure.Loot;
 using NajaEcho.Infrastructure.Loot;
 using NajaEcho.Infrastructure.Identity;
@@ -157,6 +160,11 @@ public static class DependencyInjection
         services.AddScoped<GetUsersHandler>();
         services.AddScoped<AddCharacterForUserHandler>();
         services.AddScoped<AssignRolesHandler>();
+
+        // Organizations
+        services.AddScoped<IOrganizationRepository, OrganizationRepository>();
+        services.AddScoped<GetOrganizationsHandler>();
+        services.AddScoped<AssignOrganizationHandler>();
 
         // Warehouse
         services.AddScoped<IWarehouseInventoryRepository, WarehouseInventoryRepository>();

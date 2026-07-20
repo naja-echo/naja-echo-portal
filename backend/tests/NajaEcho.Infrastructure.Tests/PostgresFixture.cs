@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using NajaEcho.Application.Abstractions;
 using NajaEcho.Infrastructure.Identity;
 using NajaEcho.Infrastructure.Persistence;
 using Npgsql;
@@ -56,14 +57,21 @@ public sealed class PostgresFixture : IAsyncLifetime
         });
     }
 
-    /// <summary>A fresh <see cref="AppDbContext"/> pointed at the shared container, configured like production.</summary>
-    public AppDbContext CreateContext()
+    /// <summary>
+    /// A fresh <see cref="AppDbContext"/> pointed at the shared container, configured like production.
+    /// </summary>
+    /// <param name="organizationContext">
+    /// The organization the context acts in. Defaults to a stub with no current organization, which
+    /// is correct for every test that predates organizations — they touch no scoped entity, and the
+    /// filter is opt-in. Pass a <see cref="StubOrganizationContext"/> to vary it.
+    /// </param>
+    public AppDbContext CreateContext(IOrganizationContext? organizationContext = null)
     {
         var opts = new DbContextOptionsBuilder<AppDbContext>()
             .UseNpgsql(ConnectionString)
             .UseSnakeCaseNamingConvention()
             .Options;
-        return new AppDbContext(opts);
+        return new AppDbContext(opts, organizationContext ?? new StubOrganizationContext());
     }
 
     /// <summary>Reset all row data (across every schema above). Call at the start of each test.</summary>
@@ -79,6 +87,7 @@ public sealed class PostgresFixture : IAsyncLifetime
     {
         var services = new ServiceCollection();
         services.AddLogging();
+        services.AddSingleton<IOrganizationContext>(new StubOrganizationContext());
         services.AddDbContext<AppDbContext>(opts =>
             opts.UseNpgsql(ConnectionString)
                 .UseSnakeCaseNamingConvention());
@@ -94,6 +103,20 @@ public sealed class PostgresFixture : IAsyncLifetime
         await _connection.DisposeAsync();
         await _pg.DisposeAsync();
     }
+}
+
+/// <summary>
+/// A mutable <see cref="IOrganizationContext"/> for tests.
+/// </summary>
+/// <remarks>
+/// Mutability is the point. The query filter reads <c>CurrentOrganizationId</c> as a DbContext
+/// instance member on every query, so a test can change this between two queries on contexts
+/// sharing one compiled model and prove the filter re-evaluates rather than baking the first
+/// value into the cached model. A record with an init-only property could not express that test.
+/// </remarks>
+public sealed class StubOrganizationContext(Guid? currentOrganizationId = null) : IOrganizationContext
+{
+    public Guid? CurrentOrganizationId { get; set; } = currentOrganizationId;
 }
 
 /// <summary>

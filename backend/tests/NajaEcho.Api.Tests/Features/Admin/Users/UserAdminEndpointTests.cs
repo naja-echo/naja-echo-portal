@@ -18,6 +18,7 @@ using NajaEcho.Application.Features.Admin.Users.GetUsers;
 using NajaEcho.Application.Features.Characters.VerifyCharacter;
 using NajaEcho.Domain.Characters;
 using Xunit;
+using NajaEcho.Domain.Organizations;
 
 namespace NajaEcho.Api.Tests.Features.Admin.Users;
 
@@ -116,7 +117,7 @@ public sealed class UserAdminEndpointTests : IClassFixture<WebApplicationFactory
         var repo = _factory.Services.GetRequiredService<UserAdminFakeUserRepo>();
         repo.Users =
         [
-            new AdminUserDto(Guid.NewGuid(), "testuser", [], []),
+            new AdminUserDto(Guid.NewGuid(), "testuser", [], [], null),
         ];
 
         var response = await CreateAdminClient().GetAsync("/api/admin/users");
@@ -337,6 +338,7 @@ internal sealed class UserAdminFakeUserRepo : IUserRepository
         LastSetRoles = roles;
         return Task.CompletedTask;
     }
+
 
     public Task<IReadOnlyList<string>> GetRolesAsync(Guid userId, CancellationToken ct) =>
         Task.FromResult<IReadOnlyList<string>>(LastSetRoles ?? []);

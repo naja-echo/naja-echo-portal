@@ -12,12 +12,15 @@ using NajaEcho.Api.Features.Admin.Blueprints;
 using NajaEcho.Api.Features.Admin.Commodities;
 using NajaEcho.Api.Features.Admin.Items;
 using NajaEcho.Api.Features.Admin.Locations;
+using NajaEcho.Api.Features.Admin.Organizations;
 using NajaEcho.Api.Features.Admin.Ships;
 using NajaEcho.Api.Features.Admin.Users;
 using NajaEcho.Api.Features.Characters;
 using NajaEcho.Api.Features.Hangar;
 using NajaEcho.Api.Features.Loot;
 using NajaEcho.Api.Features.Warehouse;
+using NajaEcho.Api.Organizations;
+using NajaEcho.Application.Abstractions;
 using NajaEcho.Application.Features.Auth.SignInWithDiscord;
 using NajaEcho.Domain.Users;
 using NajaEcho.Infrastructure;
@@ -49,6 +52,12 @@ try
             lc.WriteTo.Console(new Serilog.Formatting.Json.JsonFormatter());
         }
     });
+
+    // AppDbContext takes IOrganizationContext as a constructor parameter, so this registration must
+    // exist or the container cannot build the context. (Order relative to AddInfrastructure is
+    // irrelevant — the container resolves by type at request time, not in registration order.)
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddScoped<IOrganizationContext, HttpOrganizationContext>();
 
     builder.Services.AddInfrastructure(builder.Configuration);
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -194,11 +203,23 @@ try
 
                 var roleClaims = userRoles.Select(r => new Claim(ClaimTypes.Role, r));
 
+                // Carry the member's organization from the first request, rather than leaving them
+                // unscoped until the first claims refresh happens to run.
+                var organizationRepository = ctx.HttpContext.RequestServices
+                    .GetRequiredService<IOrganizationRepository>();
+                var organization = await organizationRepository.GetCurrentForUserAsync(
+                    result.UserId, ctx.HttpContext.RequestAborted);
+
+                Claim[] organizationClaims = organization is null
+                    ? []
+                    : [new Claim(OrganizationClaims.OrganizationId, organization.Id.ToString())];
+
                 var identity = new ClaimsIdentity(
                 [
                     new Claim(ClaimTypes.NameIdentifier, result.UserId.ToString()),
                     new Claim(ClaimTypes.Name, result.DisplayName),
                     ..roleClaims,
+                    ..organizationClaims,
                 ], IdentityConstants.ApplicationScheme);
 
                 ctx.Principal = new ClaimsPrincipal(identity);
@@ -273,6 +294,7 @@ try
     app.MapAuthEndpoints();
     app.MapShipAdminEndpoints();
     app.MapUserAdminEndpoints();
+    app.MapOrganizationAdminEndpoints();
     app.MapLocationAdminEndpoints();
     app.MapItemAdminEndpoints();
     app.MapCommodityAdminEndpoints();

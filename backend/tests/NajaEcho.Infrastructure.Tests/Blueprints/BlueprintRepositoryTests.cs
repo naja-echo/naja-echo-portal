@@ -34,7 +34,7 @@ public sealed class BlueprintRepositoryTests : IAsyncLifetime
             .UseNpgsql(connectionString)
             .UseSnakeCaseNamingConvention()
             .Options;
-        return new AppDbContext(opts);
+        return new AppDbContext(opts, new StubOrganizationContext());
     }
 
     // Each import runs in its own context, mirroring the per-request scoped DbContext in production.

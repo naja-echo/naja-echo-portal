@@ -118,7 +118,7 @@ public sealed class ItemCategoryRepositoryTests : IAsyncLifetime
             .UseNpgsql(_fixture.ConnectionString)
             .UseSnakeCaseNamingConvention()
             .Options;
-        await using var freshDb = new AppDbContext(opts);
+        await using var freshDb = new AppDbContext(opts, new StubOrganizationContext());
         var repo2 = new ItemCategoryRepository(freshDb);
 
         await repo2.Invoking(r => r.BulkUpsertAsync(badBatch)).Should().ThrowAsync<Exception>();

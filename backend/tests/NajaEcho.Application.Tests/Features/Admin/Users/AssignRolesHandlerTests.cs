@@ -4,6 +4,7 @@ using NajaEcho.Application.Abstractions;
 using NajaEcho.Application.Features.Admin.Users.AddCharacterForUser;
 using NajaEcho.Application.Features.Admin.Users.AssignRoles;
 using NajaEcho.Application.Features.Admin.Users.GetUsers;
+using NajaEcho.Domain.Organizations;
 
 namespace NajaEcho.Application.Tests.Features.Admin.Users;
 
@@ -24,6 +25,7 @@ public sealed class AssignRolesHandlerTests
             LastRolesSet = roles;
             return Task.CompletedTask;
         }
+
 
         public Task<IReadOnlyList<string>> GetRolesAsync(Guid userId, CancellationToken ct) =>
             Task.FromResult<IReadOnlyList<string>>(LastRolesSet ?? []);

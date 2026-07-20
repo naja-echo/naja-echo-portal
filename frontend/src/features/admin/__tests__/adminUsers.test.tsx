@@ -37,18 +37,21 @@ const sampleUsers = [
     characters: [
       { id: 'c0000001-0000-4000-a000-000000000001', name: 'AliceChar', handle: 'alicehandle' },
     ],
+    organization: { id: '9b8ac811-3cec-421c-8cfb-cc56f775ad5a', name: 'Naja Echo' },
   },
   {
     id: 'a0000002-0000-4000-a000-000000000002',
     authName: 'bob',
     roles: ['Quartermaster'],
     characters: [],
+    organization: null,
   },
   {
     id: 'a0000003-0000-4000-a000-000000000003',
     authName: 'charlie',
     roles: [],
     characters: [],
+    organization: null,
   },
 ]
 
