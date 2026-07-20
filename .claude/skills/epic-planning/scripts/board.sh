@@ -19,8 +19,8 @@
 # <issue> accepts: 123 | #123 | full issue URL
 set -euo pipefail
 
-OWNER="Deceptively-Clever"
-REPO="Deceptively-Clever/naja-echo-portal"
+OWNER="naja-echo"
+REPO="naja-echo/naja-echo-portal"
 PROJECT_NUMBER=3
 
 fields_json() { gh project field-list "$PROJECT_NUMBER" --owner "$OWNER" --format json; }

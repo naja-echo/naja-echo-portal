@@ -7,8 +7,8 @@ command surface. The model itself is summarized in `SKILL.md` and, for humans, i
 
 ## The board
 
-- **Project:** [Naja Echo Planning](https://github.com/orgs/Deceptively-Clever/projects/3), org `Deceptively-Clever`, project #3.
-- **Repo issues live in:** `Deceptively-Clever/naja-echo-portal`.
+- **Project:** [Naja Echo Planning](https://github.com/orgs/naja-echo/projects/3), org `naja-echo`, project #3.
+- **Repo issues live in:** `naja-echo/naja-echo-portal`.
 - **Views:** a **Pipeline** view (board layout, filtered to issue types Feature and
   Bug, grouped by **Readiness**) is the day-to-day kanban; a **Roadmap** view (grouped
   by **Parent issue**, surfacing the built-in **Sub-issues progress** field) shows the

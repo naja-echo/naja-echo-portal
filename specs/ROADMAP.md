@@ -45,7 +45,7 @@ board only once it has active or upcoming work.
 
 ## Where things live
 
-- **Board — [Naja Echo Planning](https://github.com/orgs/Deceptively-Clever/projects/3)** (org project #3): all live state.
+- **Board — [Naja Echo Planning](https://github.com/orgs/naja-echo/projects/3)** (org project #3): all live state.
 - **`epic-planning` skill:** how to shape a raw idea into board-ready work, plus
   the full board mechanics and `board.sh` command surface.
 - **`specs/NNN-name/`:** the spec, plan, and tasks for each built feature.

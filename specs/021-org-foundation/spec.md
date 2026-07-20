@@ -6,7 +6,7 @@
 
 **Status**: Planned — spec, plan, and tasks complete; ready for `/speckit-implement`
 
-**Input**: GitHub issue [#31 — Organization foundation & admin assignment](https://github.com/Deceptively-Clever/naja-echo-portal/issues/31), a Feature under Epic [#30 — Organization tenancy](https://github.com/Deceptively-Clever/naja-echo-portal/issues/30)
+**Input**: GitHub issue [#31 — Organization foundation & admin assignment](https://github.com/naja-echo/naja-echo-portal/issues/31), a Feature under Epic [#30 — Organization tenancy](https://github.com/naja-echo/naja-echo-portal/issues/30)
 
 ## Context
 

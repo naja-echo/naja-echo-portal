@@ -14,7 +14,7 @@ Thank you for your interest in contributing! This document outlines the process 
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/Deceptively-Clever/naja-echo-portal.git
+git clone https://github.com/naja-echo/naja-echo-portal.git
 cd naja-echo-portal
 ```
 
