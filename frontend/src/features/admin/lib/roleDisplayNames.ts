@@ -1,11 +1,13 @@
-export const roleDisplayNames: Record<string, string> = {
-  Admin: 'Administrator',
-  Quartermaster: 'Quartermaster',
-  CrewResourceOfficer: 'Crew Resource Officer',
+import { ALL_ROLES, ROLES, type Role } from '@/features/auth/lib/roles'
+
+export const roleDisplayNames: Record<Role, string> = {
+  [ROLES.Admin]: 'Administrator',
+  [ROLES.Quartermaster]: 'Quartermaster',
+  [ROLES.CrewResourceOfficer]: 'Crew Resource Officer',
 }
 
-export const availableRoles = Object.keys(roleDisplayNames)
+export const availableRoles = ALL_ROLES
 
 export function getRoleDisplayName(role: string): string {
-  return roleDisplayNames[role] ?? role
+  return roleDisplayNames[role as Role] ?? role
 }

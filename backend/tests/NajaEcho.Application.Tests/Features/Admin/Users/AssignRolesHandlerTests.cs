@@ -24,19 +24,32 @@ public sealed class AssignRolesHandlerTests
             LastRolesSet = roles;
             return Task.CompletedTask;
         }
+
+        public Task<IReadOnlyList<string>> GetRolesAsync(Guid userId, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<string>>(LastRolesSet ?? []);
     }
 
-    private static (AssignRolesHandler handler, FakeUserRepo repo) MakeHandler()
+    private sealed class FakeSessionInvalidator : IUserSessionInvalidator
+    {
+        public List<Guid> Invalidated { get; } = [];
+
+        public void Invalidate(Guid userId) => Invalidated.Add(userId);
+
+        public bool IsStaleSince(Guid userId, DateTimeOffset refreshedAt) => false;
+    }
+
+    private static (AssignRolesHandler handler, FakeUserRepo repo, FakeSessionInvalidator invalidator) MakeHandler()
     {
         var repo = new FakeUserRepo();
-        var handler = new AssignRolesHandler(repo, NullLogger<AssignRolesHandler>.Instance);
-        return (handler, repo);
+        var invalidator = new FakeSessionInvalidator();
+        var handler = new AssignRolesHandler(repo, invalidator, NullLogger<AssignRolesHandler>.Instance);
+        return (handler, repo, invalidator);
     }
 
     [Fact]
     public async Task HandleAsync_ValidRoles_CallsSetRolesAsync()
     {
-        var (handler, repo) = MakeHandler();
+        var (handler, repo, _) = MakeHandler();
         var userId = Guid.NewGuid();
 
         await handler.HandleAsync(new AssignRolesCommand(userId, ["Admin", "Quartermaster"]), default);
@@ -47,7 +60,7 @@ public sealed class AssignRolesHandlerTests
     [Fact]
     public async Task HandleAsync_EmptyRoles_CallsSetRolesAsyncWithEmpty()
     {
-        var (handler, repo) = MakeHandler();
+        var (handler, repo, _) = MakeHandler();
         var userId = Guid.NewGuid();
 
         await handler.HandleAsync(new AssignRolesCommand(userId, []), default);
@@ -58,7 +71,7 @@ public sealed class AssignRolesHandlerTests
     [Fact]
     public async Task HandleAsync_UserNotFound_ThrowsUserNotFoundException()
     {
-        var (handler, repo) = MakeHandler();
+        var (handler, repo, _) = MakeHandler();
         repo.Exists = false;
         var userId = Guid.NewGuid();
 
@@ -70,7 +83,7 @@ public sealed class AssignRolesHandlerTests
     [Fact]
     public async Task HandleAsync_InvalidRole_ThrowsInvalidRoleException()
     {
-        var (handler, _) = MakeHandler();
+        var (handler, _, _) = MakeHandler();
         var userId = Guid.NewGuid();
 
         var act = async () => await handler.HandleAsync(new AssignRolesCommand(userId, ["NotARealRole"]), default);
@@ -81,12 +94,59 @@ public sealed class AssignRolesHandlerTests
     [Fact]
     public async Task HandleAsync_InvalidRoleAmongValidOnes_ThrowsInvalidRoleException()
     {
-        var (handler, _) = MakeHandler();
+        var (handler, _, _) = MakeHandler();
         var userId = Guid.NewGuid();
 
         var act = async () => await handler.HandleAsync(
             new AssignRolesCommand(userId, ["Admin", "Hacker"]), default);
 
         await act.Should().ThrowAsync<InvalidRoleException>();
+    }
+
+    [Fact]
+    public async Task HandleAsync_Success_InvalidatesTheTargetUsersSession()
+    {
+        var (handler, _, invalidator) = MakeHandler();
+        var userId = Guid.NewGuid();
+
+        await handler.HandleAsync(new AssignRolesCommand(userId, ["Quartermaster"]), default);
+
+        invalidator.Invalidated.Should().Equal(userId);
+    }
+
+    [Fact]
+    public async Task HandleAsync_RevokingEveryRole_StillInvalidatesTheSession()
+    {
+        var (handler, _, invalidator) = MakeHandler();
+        var userId = Guid.NewGuid();
+
+        await handler.HandleAsync(new AssignRolesCommand(userId, []), default);
+
+        invalidator.Invalidated.Should().Equal(userId);
+    }
+
+    [Fact]
+    public async Task HandleAsync_InvalidRole_DoesNotInvalidateAnySession()
+    {
+        var (handler, _, invalidator) = MakeHandler();
+
+        var act = async () => await handler.HandleAsync(
+            new AssignRolesCommand(Guid.NewGuid(), ["NotARealRole"]), default);
+
+        await act.Should().ThrowAsync<InvalidRoleException>();
+        invalidator.Invalidated.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task HandleAsync_UserNotFound_DoesNotInvalidateAnySession()
+    {
+        var (handler, repo, invalidator) = MakeHandler();
+        repo.Exists = false;
+
+        var act = async () => await handler.HandleAsync(
+            new AssignRolesCommand(Guid.NewGuid(), ["Admin"]), default);
+
+        await act.Should().ThrowAsync<UserNotFoundException>();
+        invalidator.Invalidated.Should().BeEmpty();
     }
 }

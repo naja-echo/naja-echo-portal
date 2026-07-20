@@ -97,7 +97,14 @@ try
                 {
                     ctx.RejectPrincipal();
                     await ctx.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+                    return;
                 }
+
+                // Role claims are snapshotted at sign-in; pull fresh ones when the user was
+                // changed or the fallback interval elapsed. No-op (and no query) otherwise.
+                await ctx.HttpContext.RequestServices
+                    .GetRequiredService<RoleClaimsRefresher>()
+                    .RefreshAsync(ctx);
             };
 
             opts.Events.OnRedirectToLogin = async ctx =>
@@ -198,6 +205,9 @@ try
                 ctx.Properties!.IsPersistent = true;
                 ctx.Properties.IssuedUtc = DateTimeOffset.UtcNow;
                 ctx.Properties.ExpiresUtc = DateTimeOffset.UtcNow.AddHours(24);
+                ctx.HttpContext.RequestServices
+                    .GetRequiredService<RoleClaimsRefresher>()
+                    .StampRefreshed(ctx.Properties);
 
                 Log.Information("Local sign-in succeeded {UserId}", result.UserId);
             };
@@ -221,6 +231,7 @@ try
         });
 
     builder.Services.AddAuthorization(opts => opts.AddPolicies());
+    builder.Services.AddScoped<RoleClaimsRefresher>();
 
     var app = builder.Build();
 

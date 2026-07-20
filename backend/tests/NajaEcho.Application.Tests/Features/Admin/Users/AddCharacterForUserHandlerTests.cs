@@ -20,6 +20,9 @@ public sealed class AddCharacterForUserHandlerTests
         public Task<IReadOnlyList<Application.Features.Admin.Users.GetUsers.AdminUserDto>> GetUsersWithRolesAndCharactersAsync(CancellationToken ct)
             => Task.FromResult<IReadOnlyList<Application.Features.Admin.Users.GetUsers.AdminUserDto>>([]);
         public Task SetRolesAsync(Guid userId, IReadOnlyList<string> roles, CancellationToken ct) => Task.CompletedTask;
+
+        public Task<IReadOnlyList<string>> GetRolesAsync(Guid userId, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<string>>([]);
     }
 
     private sealed class FakeCharacterRepo : ICharacterRepository

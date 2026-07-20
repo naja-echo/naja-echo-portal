@@ -5,7 +5,8 @@ import { http, HttpResponse } from 'msw'
 import { server } from '@/tests/server'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { AdminRoute } from '@/features/auth/AdminRoute'
+import { RoleRoute } from '@/features/auth/RoleRoute'
+import { ROLES } from '@/features/auth/lib/roles'
 import { AdminUsersPage } from '../pages/AdminUsersPage'
 
 const adminSession = {
@@ -63,7 +64,7 @@ function renderUsersPage(session = adminSession, initialRoute = '/dashboard/admi
         <MemoryRouter initialEntries={[initialRoute]}>
           <Routes>
             <Route path="/dashboard" element={<div>Dashboard</div>} />
-            <Route element={<AdminRoute />}>
+            <Route element={<RoleRoute allow={[ROLES.Admin]} />}>
               <Route path="/dashboard/admin/users" element={<AdminUsersPage />} />
             </Route>
           </Routes>
@@ -167,13 +168,13 @@ describe('AdminUsersPage — filtering', () => {
 })
 
 describe('AdminUsersPage — access control', () => {
-  it('non-admin navigating to /dashboard/admin/users is redirected to dashboard', async () => {
+  it('non-admin navigating to /dashboard/admin/users gets an unauthorized state', async () => {
     server.use(http.get('/api/admin/users', () => HttpResponse.json({ users: sampleUsers })))
     renderUsersPage(regularSession)
     await waitFor(() => {
-      expect(screen.getByText('Dashboard')).toBeDefined()
-      expect(screen.queryByText('alice')).toBeNull()
+      expect(screen.getByText(/don't have access to this page/i)).toBeDefined()
     })
+    expect(screen.queryByText('alice')).toBeNull()
   })
 })
 
