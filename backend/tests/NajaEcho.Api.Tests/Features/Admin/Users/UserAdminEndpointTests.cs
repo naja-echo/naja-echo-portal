@@ -337,6 +337,9 @@ internal sealed class UserAdminFakeUserRepo : IUserRepository
         LastSetRoles = roles;
         return Task.CompletedTask;
     }
+
+    public Task<IReadOnlyList<string>> GetRolesAsync(Guid userId, CancellationToken ct) =>
+        Task.FromResult<IReadOnlyList<string>>(LastSetRoles ?? []);
 }
 
 internal sealed class UserAdminFakeCharacterRepo : ICharacterRepository

@@ -205,8 +205,11 @@ public static class DependencyInjection
         services.AddScoped<VerifyCharacterHandler>();
         services.AddScoped<GetCharactersHandler>();
 
-        // Role seeder (Admin + Quartermaster + CrewResourceOfficer)
+        // Role seeder — seeds every role in Domain.Users.Roles.All
         services.AddScoped<RoleSeeder>();
+
+        // Singleton so the invalidation flag is visible to every request in the process.
+        services.AddSingleton<IUserSessionInvalidator, InMemoryUserSessionInvalidator>();
 
         // Loot Ledger
         services.AddScoped<ILootLedgerRepository, LootLedgerRepository>();

@@ -15,6 +15,9 @@ public sealed class GetUsersHandlerTests
         public Task<IReadOnlyList<AdminUserDto>> GetUsersWithRolesAndCharactersAsync(CancellationToken ct)
             => Task.FromResult(users);
         public Task SetRolesAsync(Guid userId, IReadOnlyList<string> roles, CancellationToken ct) => Task.CompletedTask;
+
+        public Task<IReadOnlyList<string>> GetRolesAsync(Guid userId, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<string>>([]);
     }
 
     private static GetUsersHandler MakeHandler(IReadOnlyList<AdminUserDto> users) =>

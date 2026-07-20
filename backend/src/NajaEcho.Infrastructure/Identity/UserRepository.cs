@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using NajaEcho.Application.Abstractions;
 using NajaEcho.Application.Features.Admin.Users.AddCharacterForUser;
+using NajaEcho.Application.Features.Admin.Users.AssignRoles;
 using NajaEcho.Application.Features.Admin.Users.GetUsers;
 using NajaEcho.Infrastructure.Persistence;
 
@@ -63,13 +64,35 @@ public sealed class UserRepository(AppDbContext db, UserManager<ApplicationUser>
         }
 
         var current = await userManager.GetRolesAsync(user);
-        await userManager.RemoveFromRolesAsync(user, current);
+        var removal = await userManager.RemoveFromRolesAsync(user, current);
+        if (!removal.Succeeded)
+        {
+            throw new RoleAssignmentFailedException(userId, Describe(removal));
+        }
 
         if (roles.Count > 0)
         {
-            await userManager.AddToRolesAsync(user, roles);
+            var addition = await userManager.AddToRolesAsync(user, roles);
+            if (!addition.Succeeded)
+            {
+                throw new RoleAssignmentFailedException(userId, Describe(addition));
+            }
         }
     }
+
+    public async Task<IReadOnlyList<string>> GetRolesAsync(Guid userId, CancellationToken ct)
+    {
+        var user = await userManager.FindByIdAsync(userId.ToString());
+        if (user is null)
+        {
+            return [];
+        }
+
+        return (IReadOnlyList<string>)await userManager.GetRolesAsync(user);
+    }
+
+    private static string Describe(IdentityResult result) =>
+        string.Join(", ", result.Errors.Select(e => e.Description));
 
     private sealed record UserRoleCharacterRow(
         Guid UserId,
