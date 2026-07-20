@@ -1,6 +1,7 @@
 import { ShieldOff } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 /**
  * Shown when a signed-in user reaches a page their roles do not permit. Rendering this beats a
@@ -16,9 +17,9 @@ export function UnauthorizedState() {
           This area is limited to specific roles. Contact an administrator if you need access.
         </p>
       </div>
-      <Button asChild variant="outline" size="sm">
-        <Link to="/dashboard">Back to dashboard</Link>
-      </Button>
+      <Link to="/dashboard" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>
+        Back to dashboard
+      </Link>
     </div>
   )
 }
