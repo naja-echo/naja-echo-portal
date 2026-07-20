@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using NajaEcho.Application.Abstractions;
 using NajaEcho.Application.Features.Admin.Users.GetUsers;
+using NajaEcho.Domain.Organizations;
 
 namespace NajaEcho.Application.Tests.Features.Admin.Users;
 
@@ -15,6 +16,7 @@ public sealed class GetUsersHandlerTests
         public Task<IReadOnlyList<AdminUserDto>> GetUsersWithRolesAndCharactersAsync(CancellationToken ct)
             => Task.FromResult(users);
         public Task SetRolesAsync(Guid userId, IReadOnlyList<string> roles, CancellationToken ct) => Task.CompletedTask;
+
 
         public Task<IReadOnlyList<string>> GetRolesAsync(Guid userId, CancellationToken ct) =>
             Task.FromResult<IReadOnlyList<string>>([]);
@@ -30,8 +32,8 @@ public sealed class GetUsersHandlerTests
         var userId2 = Guid.NewGuid();
         var users = new List<AdminUserDto>
         {
-            new(userId1, "alice", ["Admin"], [new(Guid.NewGuid(), "Alice Char", "alicehandle")]),
-            new(userId2, "bob", [], []),
+            new(userId1, "alice", ["Admin"], [new(Guid.NewGuid(), "Alice Char", "alicehandle")], null),
+            new(userId2, "bob", [], [], null),
         };
         var handler = MakeHandler(users);
 
@@ -48,7 +50,7 @@ public sealed class GetUsersHandlerTests
         var userId = Guid.NewGuid();
         var users = new List<AdminUserDto>
         {
-            new(userId, "emptyuser", [], []),
+            new(userId, "emptyuser", [], [], null),
         };
         var handler = MakeHandler(users);
 
@@ -72,7 +74,8 @@ public sealed class GetUsersHandlerTests
                 [
                     new(charId1, "Char One", "handle1"),
                     new(charId2, "Char Two", "handle2"),
-                ]),
+                ],
+                null),
         };
         var handler = MakeHandler(users);
 

@@ -9,6 +9,7 @@ using NajaEcho.Application.Abstractions;
 using NajaEcho.Application.Features.Admin.Users.GetUsers;
 using NajaEcho.Domain.Users;
 using Xunit;
+using NajaEcho.Domain.Organizations;
 
 namespace NajaEcho.Api.Tests.Authorization;
 
@@ -122,7 +123,8 @@ public sealed class RoleClaimsRefresherTests
         var repo = new FakeUserRepo();
         var invalidator = new FakeInvalidator();
         var refresher = new RoleClaimsRefresher(
-            repo, invalidator, new FixedClock(Now), NullLogger<RoleClaimsRefresher>.Instance);
+            repo, new NoOrganizationRepo(), invalidator, new FixedClock(Now),
+            NullLogger<RoleClaimsRefresher>.Instance);
         return (refresher, repo, invalidator);
     }
 
@@ -161,6 +163,19 @@ public sealed class RoleClaimsRefresherTests
         public DateTimeOffset UtcNow => now;
     }
 
+    /// <summary>These tests are about roles; organization membership is covered by
+    /// <see cref="OrganizationClaimsRefreshTests"/>.</summary>
+    private sealed class NoOrganizationRepo : IOrganizationRepository
+    {
+        public Task<IReadOnlyList<Organization>> GetAllAsync(CancellationToken ct)
+            => Task.FromResult<IReadOnlyList<Organization>>([]);
+        public Task<bool> ExistsAsync(Guid organizationId, CancellationToken ct) => Task.FromResult(true);
+        public Task<Organization?> GetCurrentForUserAsync(Guid userId, CancellationToken ct)
+            => Task.FromResult<Organization?>(null);
+        public Task<Guid?> SetCurrentAsync(Guid userId, Guid? organizationId, CancellationToken ct)
+            => Task.FromResult<Guid?>(null);
+    }
+
     private sealed class FakeInvalidator : IUserSessionInvalidator
     {
         public bool Stale { get; set; }
@@ -174,6 +189,7 @@ public sealed class RoleClaimsRefresherTests
     {
         public int GetRolesCallCount { get; private set; }
         public IReadOnlyList<string> Roles { get; set; } = [];
+
 
         public Task<IReadOnlyList<string>> GetRolesAsync(Guid userId, CancellationToken ct)
         {

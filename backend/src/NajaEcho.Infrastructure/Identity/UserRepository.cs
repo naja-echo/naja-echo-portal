@@ -24,6 +24,11 @@ public sealed class UserRepository(AppDbContext db, UserManager<ApplicationUser>
 
     public async Task<IReadOnlyList<AdminUserDto>> GetUsersWithRolesAndCharactersAsync(CancellationToken ct)
     {
+        // Hand-authored SQL, so the global query filter does not apply (spec FR-020a). That is
+        // correct here rather than a gap: member administration is deliberately NOT organization
+        // -scoped (FR-025) — an admin must see every registered member regardless of organization,
+        // including members belonging to none. Adding an organization predicate would hide exactly
+        // the members an admin needs to find in order to assign one.
         var rows = await db.Database.SqlQuery<UserRoleCharacterRow>($"""
             SELECT
               u.id               AS user_id,
@@ -31,11 +36,15 @@ public sealed class UserRepository(AppDbContext db, UserManager<ApplicationUser>
               r.name             AS role_name,
               c.id               AS character_id,
               c.name             AS character_name,
-              c.handle           AS character_handle
+              c.handle           AS character_handle,
+              o.id               AS organization_id,
+              o.name             AS organization_name
             FROM "AspNetUsers" u
             LEFT JOIN "AspNetUserRoles" ur ON ur.user_id = u.id
             LEFT JOIN "AspNetRoles"     r  ON r.id       = ur.role_id
             LEFT JOIN characters        c  ON c.owner_user_id = u.id
+            LEFT JOIN organization_memberships m ON m.user_id = u.id AND m.is_current
+            LEFT JOIN organizations     o  ON o.id = m.organization_id
             ORDER BY u.display_name, r.name, c.name
             """).ToListAsync(ct);
 
@@ -51,7 +60,11 @@ public sealed class UserRepository(AppDbContext db, UserManager<ApplicationUser>
                 g.Where(r => r.CharacterId is not null)
                   .Select(r => new AdminUserCharacterDto(r.CharacterId!.Value, r.CharacterName!, r.CharacterHandle!))
                   .DistinctBy(c => c.Id)
-                  .ToList()))
+                  .ToList(),
+                g.Select(r => r.OrganizationId is null
+                        ? null
+                        : new AdminUserOrganizationDto(r.OrganizationId.Value, r.OrganizationName!))
+                  .FirstOrDefault(o => o is not null)))
             .ToList();
     }
 
@@ -100,5 +113,7 @@ public sealed class UserRepository(AppDbContext db, UserManager<ApplicationUser>
         string? RoleName,
         Guid? CharacterId,
         string? CharacterName,
-        string? CharacterHandle);
+        string? CharacterHandle,
+        Guid? OrganizationId,
+        string? OrganizationName);
 }

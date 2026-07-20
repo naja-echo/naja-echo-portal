@@ -18,7 +18,8 @@
     "gen:api:commodities": "openapi-typescript ../specs/010-commodity-data-import/contracts/openapi.yaml -o src/lib/api/commodities.d.ts",
     "gen:api:warehouse": "openapi-typescript ../specs/011-warehouse-item-inventory/contracts/openapi.yaml -o src/lib/api/warehouse.d.ts",
     "gen:api:ship-components": "openapi-typescript ../specs/012-warehouse-ship-components/contracts/openapi.yaml -o src/lib/api/ship-components.d.ts",
-    "gen:api:materials": "openapi-typescript ../specs/014-warehouse-materials/contracts/openapi.yaml -o src/lib/api/materials.d.ts"
+    "gen:api:materials": "openapi-typescript ../specs/014-warehouse-materials/contracts/openapi.yaml -o src/lib/api/materials.d.ts",
+    "gen:api:organizations": "openapi-typescript ../specs/021-org-foundation/contracts/openapi.yaml -o src/lib/api/organizations.d.ts"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.9",

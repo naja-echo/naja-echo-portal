@@ -23,6 +23,7 @@ using NajaEcho.Application.Features.Warehouse.ShipComponents.SearchSystemsCatalo
 using NajaEcho.Domain.Warehouse;
 using NajaEcho.Infrastructure.Persistence;
 using Xunit;
+using NajaEcho.Domain.Organizations;
 
 namespace NajaEcho.Api.Tests.Features.Warehouse;
 
@@ -430,6 +431,7 @@ internal sealed class WarehouseFakeUserRepo : IUserRepository
     public Task<IReadOnlyList<NajaEcho.Application.Features.Admin.Users.GetUsers.AdminUserDto>> GetUsersWithRolesAndCharactersAsync(CancellationToken ct) =>
         Task.FromResult<IReadOnlyList<NajaEcho.Application.Features.Admin.Users.GetUsers.AdminUserDto>>([]);
     public Task SetRolesAsync(Guid userId, IReadOnlyList<string> roles, CancellationToken ct) => Task.CompletedTask;
+
 
     public Task<IReadOnlyList<string>> GetRolesAsync(Guid userId, CancellationToken ct) =>
         Task.FromResult<IReadOnlyList<string>>([]);

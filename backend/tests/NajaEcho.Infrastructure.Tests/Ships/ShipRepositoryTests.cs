@@ -90,7 +90,7 @@ public sealed class ShipRepositoryTests : IAsyncLifetime
             .UseNpgsql(_fixture.ConnectionString)
             .UseSnakeCaseNamingConvention()
             .Options;
-        using var freshDb = new AppDbContext(opts);
+        using var freshDb = new AppDbContext(opts, new StubOrganizationContext());
         var repo2 = new NajaEcho.Infrastructure.Ships.ShipRepository(freshDb);
 
         await repo2.Invoking(r => r.BulkUpsertAsync(badBatch)).Should().ThrowAsync<Exception>();

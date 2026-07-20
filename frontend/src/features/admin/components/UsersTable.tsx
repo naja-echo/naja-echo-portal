@@ -7,23 +7,35 @@ interface UsersTableProps {
   users: AdminUser[]
   onAddCharacter: (userId: string) => void
   onAssignRoles: (userId: string, currentRoles: string[]) => void
+  onAssignOrganization: (userId: string, currentOrganizationId: string | null) => void
 }
 
-export function UsersTable({ users, onAddCharacter, onAssignRoles }: UsersTableProps) {
+export function UsersTable({
+  users,
+  onAddCharacter,
+  onAssignRoles,
+  onAssignOrganization,
+}: UsersTableProps) {
   return (
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead>Auth Name</TableHead>
+          <TableHead>Organization</TableHead>
           <TableHead>Roles</TableHead>
           <TableHead>Characters</TableHead>
-          <TableHead className="w-64"><span className="sr-only">Actions</span></TableHead>
+          <TableHead className="w-96"><span className="sr-only">Actions</span></TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {users.map((user) => (
           <TableRow key={user.id}>
             <TableCell className="font-medium">{user.authName}</TableCell>
+            <TableCell>
+              {user.organization
+                ? user.organization.name
+                : <span className="text-muted-foreground">—</span>}
+            </TableCell>
             <TableCell>
               {user.roles.length > 0
                 ? user.roles.map(getRoleDisplayName).join(', ')
@@ -42,6 +54,13 @@ export function UsersTable({ users, onAddCharacter, onAssignRoles }: UsersTableP
                   onClick={() => onAssignRoles(user.id, user.roles)}
                 >
                   Assign Roles
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onAssignOrganization(user.id, user.organization?.id ?? null)}
+                >
+                  Assign Organization
                 </Button>
                 <Button
                   variant="outline"
