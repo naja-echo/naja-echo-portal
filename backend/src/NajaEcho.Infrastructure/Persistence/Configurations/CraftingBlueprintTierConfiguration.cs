@@ -25,5 +25,9 @@ public sealed class CraftingBlueprintTierConfiguration : IEntityTypeConfiguratio
         builder.HasIndex(t => new { t.BlueprintId, t.TierIndex })
             .IsUnique()
             .HasDatabaseName("ux_blueprint_tiers_blueprint_id_tier_index");
+
+        builder.HasIndex(t => t.BlueprintId)
+            .HasDatabaseName("ix_blueprint_tiers_blueprint_id_tier0")
+            .HasFilter("tier_index = 0");
     }
 }

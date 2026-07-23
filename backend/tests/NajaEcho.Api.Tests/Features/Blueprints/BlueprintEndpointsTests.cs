@@ -15,6 +15,8 @@ using Microsoft.Extensions.Options;
 using NajaEcho.Application.Abstractions;
 using NajaEcho.Application.Features.Blueprints.GetBlueprintDetail;
 using NajaEcho.Application.Features.Blueprints.GetMyBlueprints;
+using NajaEcho.Application.Features.Blueprints.GetOrgBlueprintDetail;
+using NajaEcho.Application.Features.Blueprints.GetOrgBlueprints;
 using NajaEcho.Application.Features.Blueprints.SearchBlueprints;
 using NajaEcho.Domain.Blueprints;
 using NajaEcho.Domain.Users;
@@ -55,6 +57,10 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
                 services.RemoveAll<IUserBlueprintRepository>();
                 services.AddSingleton<FakeUserBlueprintTestRepository>();
                 services.AddSingleton<IUserBlueprintRepository>(sp => sp.GetRequiredService<FakeUserBlueprintTestRepository>());
+
+                services.RemoveAll<IOrgBlueprintRepository>();
+                services.AddSingleton<FakeOrgBlueprintTestRepository>();
+                services.AddSingleton<IOrgBlueprintRepository>(sp => sp.GetRequiredService<FakeOrgBlueprintTestRepository>());
 
                 services.AddAuthentication()
                     .AddScheme<AuthenticationSchemeOptions, BlueprintTestUserAuthHandler>(
@@ -267,6 +273,72 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
+    // ── GET /api/blueprints/org ────────────────────────────────────
+
+    [Fact]
+    public async Task GetOrg_Unauthenticated_Returns401()
+    {
+        var response = await AnonymousClient().GetAsync("/api/blueprints/org");
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task GetOrg_Authenticated_Returns200WithBlueprintsArray()
+    {
+        var blueprintId = Guid.NewGuid();
+        _factory.Services.GetRequiredService<FakeOrgBlueprintTestRepository>()
+            .ListResult = [new OrgBlueprintListItemDto(blueprintId, "Hull Panel", "Component", 2)];
+
+        var response = await AuthenticatedClient().GetAsync("/api/blueprints/org");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<OrgListResponseShape>();
+        body!.Blueprints.Should().HaveCount(1);
+        body.Blueprints[0].BlueprintId.Should().Be(blueprintId);
+        body.Blueprints[0].ProductName.Should().Be("Hull Panel");
+    }
+
+    // ── GET /api/blueprints/org/{blueprintId} ─────────────────────
+
+    [Fact]
+    public async Task GetOrgDetail_Unauthenticated_Returns401()
+    {
+        var blueprintId = Guid.NewGuid();
+        var response = await AnonymousClient().GetAsync($"/api/blueprints/org/{blueprintId}");
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task GetOrgDetail_NotInOrgList_Returns404()
+    {
+        var blueprintId = Guid.NewGuid();
+        var response = await AuthenticatedClient().GetAsync($"/api/blueprints/org/{blueprintId}");
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task GetOrgDetail_InOrgList_Returns200WithDetailShape()
+    {
+        var blueprintId = Guid.NewGuid();
+        var ownerId = Guid.NewGuid();
+        _factory.Services.GetRequiredService<FakeOrgBlueprintTestRepository>()
+            .DetailResult = new OrgBlueprintDetailDto(
+                blueprintId, "Widget Mk1", "Weapon", 330, 2,
+                [new BlueprintSlotDto(0, "Cast Iron", [new BlueprintSlotOptionDto(0, "Iron Ore", "material", 1.5m)])],
+                [new OrgBlueprintOwnerDto(ownerId, "Nashtok")]);
+
+        var response = await AuthenticatedClient().GetAsync($"/api/blueprints/org/{blueprintId}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<OrgDetailResponseShape>();
+        body!.BlueprintId.Should().Be(blueprintId);
+        body.ProductName.Should().Be("Widget Mk1");
+        body.CraftTimeSeconds.Should().Be(330);
+        body.Slots.Should().HaveCount(1);
+        body.Owners.Should().HaveCount(1);
+        body.Owners[0].DisplayName.Should().Be("Nashtok");
+    }
+
     // ── Response shapes ───────────────────────────────────────────
 
     private sealed record ItemResponseShape(Guid BlueprintId, string? ProductName, string? Type, int IngredientCount);
@@ -276,6 +348,10 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
     private sealed record SlotOptionShape(int OptionIndex, string MaterialName, string Kind, decimal Quantity);
     private sealed record SlotShape(int SlotIndex, string SlotName, List<SlotOptionShape> Options);
     private sealed record DetailResponseShape(Guid BlueprintId, string? ProductName, string? Type, int? CraftTimeSeconds, int IngredientCount, List<SlotShape> Slots);
+    private sealed record OwnerShape(Guid UserId, string DisplayName);
+    private sealed record OrgItemShape(Guid BlueprintId, string? ProductName, string? Type, int IngredientCount);
+    private sealed record OrgListResponseShape(List<OrgItemShape> Blueprints);
+    private sealed record OrgDetailResponseShape(Guid BlueprintId, string? ProductName, string? Type, int? CraftTimeSeconds, int IngredientCount, List<SlotShape> Slots, List<OwnerShape> Owners);
 }
 
 // ── Fakes ────────────────────────────────────────────────────────
@@ -336,6 +412,18 @@ internal sealed class FakeSearchableBlueprintRepository : IBlueprintRepository
 
     public Task<IReadOnlyList<BlueprintSearchResultDto>> SearchAsync(string term, int limit = 20, CancellationToken ct = default) =>
         Task.FromResult(SearchResults);
+}
+
+internal sealed class FakeOrgBlueprintTestRepository : IOrgBlueprintRepository
+{
+    public IReadOnlyList<OrgBlueprintListItemDto> ListResult { get; set; } = [];
+    public OrgBlueprintDetailDto? DetailResult { get; set; }
+
+    public Task<IReadOnlyList<OrgBlueprintListItemDto>> GetListAsync(Guid userId, CancellationToken ct = default) =>
+        Task.FromResult(ListResult);
+
+    public Task<OrgBlueprintDetailDto?> GetDetailAsync(Guid userId, Guid blueprintId, CancellationToken ct = default) =>
+        Task.FromResult(DetailResult);
 }
 
 internal sealed class FakeBlueprintTestLoginService : IExternalLoginService

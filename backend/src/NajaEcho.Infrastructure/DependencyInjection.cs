@@ -8,6 +8,8 @@ using NajaEcho.Application.Features.Blueprints.AddMyBlueprint;
 using NajaEcho.Application.Features.Blueprints.GetBlueprintDetail;
 using NajaEcho.Application.Features.Blueprints.GetBlueprints;
 using NajaEcho.Application.Features.Blueprints.GetMyBlueprints;
+using NajaEcho.Application.Features.Blueprints.GetOrgBlueprintDetail;
+using NajaEcho.Application.Features.Blueprints.GetOrgBlueprints;
 using NajaEcho.Application.Features.Blueprints.ImportBlueprints;
 using NajaEcho.Application.Features.Blueprints.RemoveMyBlueprint;
 using NajaEcho.Application.Features.Blueprints.SearchBlueprints;
@@ -243,6 +245,11 @@ public static class DependencyInjection
         services.AddScoped<AddMyBlueprintHandler>();
         services.AddScoped<GetBlueprintDetailHandler>();
         services.AddScoped<RemoveMyBlueprintHandler>();
+
+        // Org Blueprints
+        services.AddScoped<IOrgBlueprintRepository, OrgBlueprintRepository>();
+        services.AddScoped<GetOrgBlueprintsHandler>();
+        services.AddScoped<GetOrgBlueprintDetailHandler>();
 
         return services;
     }

@@ -20,6 +20,7 @@ export const navItems: NavItem[] = [
   { label: 'Ship Components', path: '/warehouse/ship-components', icon: Package, group: 'Warehouse' },
   { label: 'Materials', path: '/warehouse/materials', icon: Package, group: 'Warehouse' },
   { label: 'My Blueprints', path: '/blueprints/personal', icon: ScrollText, group: 'Blueprints' },
+  { label: 'Org Blueprints', path: '/blueprints/org', icon: ScrollText, group: 'Blueprints' },
   { label: 'My Loot', path: '/crew-resources/my-loot', icon: Coins, group: 'Crew Resources' },
   {
     label: 'Loot Distribution',

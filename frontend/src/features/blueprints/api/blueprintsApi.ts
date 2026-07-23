@@ -68,6 +68,44 @@ export async function removeMyBlueprint(blueprintId: string): Promise<void> {
   if (!res.ok) throw Object.assign(new Error(`Failed to remove blueprint: ${res.status}`), { status: res.status })
 }
 
+export interface OrgBlueprintListItem {
+  blueprintId: string
+  productName: string | null
+  type: string | null
+  ingredientCount: number
+}
+
+export interface OrgBlueprintListResponse {
+  blueprints: OrgBlueprintListItem[]
+}
+
+export interface BlueprintOwner {
+  userId: string
+  displayName: string
+}
+
+export interface OrgBlueprintDetail {
+  blueprintId: string
+  productName: string | null
+  type: string | null
+  craftTimeSeconds: number | null
+  ingredientCount: number
+  slots: BlueprintSlot[]
+  owners: BlueprintOwner[]
+}
+
+export async function getOrgBlueprints(): Promise<OrgBlueprintListResponse> {
+  const res = await fetch('/api/blueprints/org', { credentials: 'include' })
+  if (!res.ok) throw new Error(`Failed to load org blueprints: ${res.status}`)
+  return res.json() as Promise<OrgBlueprintListResponse>
+}
+
+export async function getOrgBlueprintDetail(blueprintId: string): Promise<OrgBlueprintDetail> {
+  const res = await fetch(`/api/blueprints/org/${blueprintId}`, { credentials: 'include' })
+  if (!res.ok) throw Object.assign(new Error(`Failed to load org blueprint detail: ${res.status}`), { status: res.status })
+  return res.json() as Promise<OrgBlueprintDetail>
+}
+
 export async function addMyBlueprint(blueprintId: string): Promise<MyBlueprintListItem> {
   const res = await fetch('/api/blueprints/mine', {
     method: 'POST',

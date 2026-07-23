@@ -3,6 +3,8 @@ using NajaEcho.Api.Features.Blueprints.Contracts;
 using NajaEcho.Application.Features.Blueprints.AddMyBlueprint;
 using NajaEcho.Application.Features.Blueprints.GetBlueprintDetail;
 using NajaEcho.Application.Features.Blueprints.GetMyBlueprints;
+using NajaEcho.Application.Features.Blueprints.GetOrgBlueprintDetail;
+using NajaEcho.Application.Features.Blueprints.GetOrgBlueprints;
 using NajaEcho.Application.Features.Blueprints.RemoveMyBlueprint;
 using NajaEcho.Application.Features.Blueprints.SearchBlueprints;
 using NajaEcho.Domain.Blueprints;
@@ -21,6 +23,8 @@ public static class BlueprintEndpoints
         group.MapPost("/mine", AddMyBlueprint);
         group.MapGet("/mine/{blueprintId:guid}", GetMyBlueprintDetail);
         group.MapDelete("/mine/{blueprintId:guid}", RemoveMyBlueprint);
+        group.MapGet("/org", GetOrgBlueprints);
+        group.MapGet("/org/{blueprintId:guid}", GetOrgBlueprintDetail);
 
         return app;
     }
@@ -151,6 +155,52 @@ public static class BlueprintEndpoints
 
         Log.Information("RemoveMyBlueprint succeeded {UserId} blueprintId={BlueprintId}", userId, blueprintId);
         return Results.NoContent();
+    }
+
+    private static async Task<IResult> GetOrgBlueprints(
+        ClaimsPrincipal user,
+        GetOrgBlueprintsHandler handler,
+        CancellationToken ct = default)
+    {
+        if (!TryGetUserId(user, out var userId))
+            return Results.Unauthorized();
+
+        Log.Information("GetOrgBlueprints {UserId}", userId);
+
+        var items = await handler.HandleAsync(new GetOrgBlueprintsQuery(userId), ct);
+
+        return Results.Ok(new OrgBlueprintListResponse(
+            items.Select(i => new OrgBlueprintListItemResponse(i.BlueprintId, i.ProductName, i.Type, i.IngredientCount)).ToList()));
+    }
+
+    private static async Task<IResult> GetOrgBlueprintDetail(
+        ClaimsPrincipal user,
+        Guid blueprintId,
+        GetOrgBlueprintDetailHandler handler,
+        CancellationToken ct = default)
+    {
+        if (!TryGetUserId(user, out var userId))
+            return Results.Unauthorized();
+
+        Log.Information("GetOrgBlueprintDetail {UserId} blueprintId={BlueprintId}", userId, blueprintId);
+
+        var detail = await handler.HandleAsync(new GetOrgBlueprintDetailQuery(userId, blueprintId), ct);
+
+        if (detail is null)
+            return Results.NotFound();
+
+        return Results.Ok(new OrgBlueprintDetailResponse(
+            detail.BlueprintId,
+            detail.ProductName,
+            detail.Type,
+            detail.CraftTimeSeconds,
+            detail.IngredientCount,
+            detail.Slots.Select(s => new BlueprintSlotResponse(
+                s.SlotIndex,
+                s.SlotName,
+                s.Options.Select(o => new BlueprintSlotOptionResponse(o.OptionIndex, o.MaterialName, o.Kind, o.Quantity)).ToList()
+            )).ToList(),
+            detail.Owners.Select(o => new BlueprintOwnerResponse(o.UserId, o.DisplayName)).ToList()));
     }
 
     private static bool TryGetUserId(ClaimsPrincipal user, out Guid userId)

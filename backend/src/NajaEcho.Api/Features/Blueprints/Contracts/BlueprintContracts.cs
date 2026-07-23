@@ -37,3 +37,23 @@ public sealed record MyBlueprintListResponse(
     IReadOnlyList<MyBlueprintListItemResponse> Blueprints);
 
 public sealed record AddMyBlueprintRequest(Guid BlueprintId);
+
+public sealed record OrgBlueprintListItemResponse(
+    Guid BlueprintId,
+    string? ProductName,
+    string? Type,
+    int IngredientCount);
+
+public sealed record OrgBlueprintListResponse(
+    IReadOnlyList<OrgBlueprintListItemResponse> Blueprints);
+
+public sealed record BlueprintOwnerResponse(Guid UserId, string DisplayName);
+
+public sealed record OrgBlueprintDetailResponse(
+    Guid BlueprintId,
+    string? ProductName,
+    string? Type,
+    int? CraftTimeSeconds,
+    int IngredientCount,
+    IReadOnlyList<BlueprintSlotResponse> Slots,
+    IReadOnlyList<BlueprintOwnerResponse> Owners);
