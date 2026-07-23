@@ -1,5 +1,6 @@
 using NajaEcho.Application.Features.Blueprints.GetBlueprints;
 using NajaEcho.Application.Features.Blueprints.ImportBlueprints;
+using NajaEcho.Application.Features.Blueprints.SearchBlueprints;
 using NajaEcho.Domain.Blueprints;
 
 namespace NajaEcho.Application.Abstractions;
@@ -28,4 +29,10 @@ public interface IBlueprintRepository
 
     /// <summary>Returns every blueprint with its computed display name, ordered by display name (FR-022).</summary>
     Task<IReadOnlyList<BlueprintListItemDto>> GetListAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Searches the blueprint catalog by product name (case-insensitive ILIKE). Returns at most
+    /// <paramref name="limit"/> results. Only blueprints with a non-null product_name are returned.
+    /// </summary>
+    Task<IReadOnlyList<BlueprintSearchResultDto>> SearchAsync(string term, int limit = 20, CancellationToken ct = default);
 }

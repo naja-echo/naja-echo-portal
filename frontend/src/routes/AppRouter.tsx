@@ -16,6 +16,7 @@ import { OrgHangarView } from '@/features/hangar/pages/OrgHangarView'
 import { WarehouseItemsView } from '@/features/warehouse/pages/WarehouseItemsView'
 import { ShipComponentsView } from '@/features/warehouse/pages/ShipComponentsView'
 import { MaterialsView } from '@/features/warehouse/pages/MaterialsView'
+import { MyBlueprintsPage } from '@/features/blueprints/pages/MyBlueprintsPage'
 import { MyLootPage } from '@/features/crew-resources/pages/MyLootPage'
 import { LootDistributionPage } from '@/features/crew-resources/pages/LootDistributionPage'
 
@@ -36,6 +37,7 @@ export function AppRouter() {
             <Route path="/warehouse/items" element={<WarehouseItemsView />} />
             <Route path="/warehouse/ship-components" element={<ShipComponentsView />} />
             <Route path="/warehouse/materials" element={<MaterialsView />} />
+            <Route path="/blueprints/mine" element={<MyBlueprintsPage />} />
             <Route path="/crew-resources/my-loot" element={<MyLootPage />} />
             <Route element={<RoleRoute allow={[ROLES.CrewResourceOfficer, ROLES.Quartermaster]} />}>
               <Route path="/crew-resources/loot-distribution" element={<LootDistributionPage />} />

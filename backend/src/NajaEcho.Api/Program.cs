@@ -16,6 +16,7 @@ using NajaEcho.Api.Features.Admin.Organizations;
 using NajaEcho.Api.Features.Admin.Ships;
 using NajaEcho.Api.Features.Admin.Users;
 using NajaEcho.Api.Features.Characters;
+using NajaEcho.Api.Features.Blueprints;
 using NajaEcho.Api.Features.Hangar;
 using NajaEcho.Api.Features.Loot;
 using NajaEcho.Api.Features.Warehouse;
@@ -300,6 +301,7 @@ try
     app.MapCommodityAdminEndpoints();
     app.MapBlueprintAdminEndpoints();
     app.MapCharacterEndpoints();
+    app.MapBlueprintEndpoints();
     app.MapHangarEndpoints();
     app.MapWarehouseEndpoints();
     app.MapLootEndpoints();
