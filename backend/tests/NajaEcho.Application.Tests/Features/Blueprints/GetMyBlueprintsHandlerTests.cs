@@ -1,5 +1,6 @@
 using FluentAssertions;
 using NajaEcho.Application.Abstractions;
+using NajaEcho.Application.Features.Blueprints.GetBlueprintDetail;
 using NajaEcho.Application.Features.Blueprints.GetMyBlueprints;
 using Xunit;
 
@@ -28,6 +29,12 @@ public class GetMyBlueprintsHandlerTests
         }
 
         public Task<MyBlueprintListItemDto> AddAsync(Guid userId, Guid blueprintId, CancellationToken ct = default) =>
+            throw new NotImplementedException();
+
+        public Task<BlueprintDetailDto?> GetDetailAsync(Guid userId, Guid blueprintId, CancellationToken ct = default) =>
+            throw new NotImplementedException();
+
+        public Task<bool> RemoveAsync(Guid userId, Guid blueprintId, CancellationToken ct = default) =>
             throw new NotImplementedException();
     }
 

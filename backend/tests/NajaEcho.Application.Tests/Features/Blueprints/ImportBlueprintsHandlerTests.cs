@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using NajaEcho.Application.Abstractions;
 using NajaEcho.Application.Features.Blueprints.GetBlueprints;
 using NajaEcho.Application.Features.Blueprints.ImportBlueprints;
+using NajaEcho.Application.Features.Blueprints.SearchBlueprints;
 using NajaEcho.Application.Features.Ships.ImportShips;
 using NajaEcho.Domain.Blueprints;
 using Xunit;
@@ -161,5 +162,8 @@ public class ImportBlueprintsHandlerTests
 
         public Task<IReadOnlyList<BlueprintListItemDto>> GetListAsync(CancellationToken ct = default) =>
             Task.FromResult<IReadOnlyList<BlueprintListItemDto>>([]);
+
+        public Task<IReadOnlyList<BlueprintSearchResultDto>> SearchAsync(string term, int limit = 20, CancellationToken ct = default) =>
+            throw new NotImplementedException();
     }
 }

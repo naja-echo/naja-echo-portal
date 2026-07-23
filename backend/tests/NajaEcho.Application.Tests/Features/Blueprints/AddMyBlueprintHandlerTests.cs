@@ -1,6 +1,7 @@
 using FluentAssertions;
 using NajaEcho.Application.Abstractions;
 using NajaEcho.Application.Features.Blueprints.AddMyBlueprint;
+using NajaEcho.Application.Features.Blueprints.GetBlueprintDetail;
 using NajaEcho.Application.Features.Blueprints.GetMyBlueprints;
 using NajaEcho.Domain.Blueprints;
 using Xunit;
@@ -34,6 +35,12 @@ public class AddMyBlueprintHandlerTests
 
             return Task.FromResult(new MyBlueprintListItemDto(blueprintId, "Widget", "Weapon", 2));
         }
+
+        public Task<BlueprintDetailDto?> GetDetailAsync(Guid userId, Guid blueprintId, CancellationToken ct = default) =>
+            throw new NotImplementedException();
+
+        public Task<bool> RemoveAsync(Guid userId, Guid blueprintId, CancellationToken ct = default) =>
+            throw new NotImplementedException();
     }
 
     [Fact]

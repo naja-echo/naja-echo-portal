@@ -1,8 +1,10 @@
 using System.Security.Claims;
 using NajaEcho.Api.Features.Blueprints.Contracts;
-using NajaEcho.Application.Features.Blueprints.GetMyBlueprints;
-using NajaEcho.Application.Features.Blueprints.SearchBlueprints;
 using NajaEcho.Application.Features.Blueprints.AddMyBlueprint;
+using NajaEcho.Application.Features.Blueprints.GetBlueprintDetail;
+using NajaEcho.Application.Features.Blueprints.GetMyBlueprints;
+using NajaEcho.Application.Features.Blueprints.RemoveMyBlueprint;
+using NajaEcho.Application.Features.Blueprints.SearchBlueprints;
 using NajaEcho.Domain.Blueprints;
 using Serilog;
 
@@ -17,6 +19,8 @@ public static class BlueprintEndpoints
         group.MapGet("/search", SearchBlueprints);
         group.MapGet("/mine", GetMyBlueprints);
         group.MapPost("/mine", AddMyBlueprint);
+        group.MapGet("/mine/{blueprintId:guid}", GetMyBlueprintDetail);
+        group.MapDelete("/mine/{blueprintId:guid}", RemoveMyBlueprint);
 
         return app;
     }
@@ -98,6 +102,55 @@ public static class BlueprintEndpoints
             Log.Warning("AddMyBlueprint 409 {UserId} {BlueprintId}: {Message}", userId, body.BlueprintId, ex.Message);
             return Results.Problem(detail: ex.Message, statusCode: StatusCodes.Status409Conflict, title: "Blueprint already in your list.");
         }
+    }
+
+    private static async Task<IResult> GetMyBlueprintDetail(
+        ClaimsPrincipal user,
+        Guid blueprintId,
+        GetBlueprintDetailHandler handler,
+        CancellationToken ct = default)
+    {
+        if (!TryGetUserId(user, out var userId))
+            return Results.Unauthorized();
+
+        Log.Information("GetMyBlueprintDetail {UserId} blueprintId={BlueprintId}", userId, blueprintId);
+
+        var detail = await handler.HandleAsync(new GetBlueprintDetailQuery(userId, blueprintId), ct);
+
+        if (detail is null)
+            return Results.NotFound();
+
+        return Results.Ok(new BlueprintDetailResponse(
+            detail.BlueprintId,
+            detail.ProductName,
+            detail.Type,
+            detail.CraftTimeSeconds,
+            detail.IngredientCount,
+            detail.Slots.Select(s => new BlueprintSlotResponse(
+                s.SlotIndex,
+                s.SlotName,
+                s.Options.Select(o => new BlueprintSlotOptionResponse(o.OptionIndex, o.MaterialName, o.Kind, o.Quantity)).ToList()
+            )).ToList()));
+    }
+
+    private static async Task<IResult> RemoveMyBlueprint(
+        ClaimsPrincipal user,
+        Guid blueprintId,
+        RemoveMyBlueprintHandler handler,
+        CancellationToken ct = default)
+    {
+        if (!TryGetUserId(user, out var userId))
+            return Results.Unauthorized();
+
+        Log.Information("RemoveMyBlueprint {UserId} blueprintId={BlueprintId}", userId, blueprintId);
+
+        var removed = await handler.HandleAsync(new RemoveMyBlueprintCommand(userId, blueprintId), ct);
+
+        if (!removed)
+            return Results.NotFound();
+
+        Log.Information("RemoveMyBlueprint succeeded {UserId} blueprintId={BlueprintId}", userId, blueprintId);
+        return Results.NoContent();
     }
 
     private static bool TryGetUserId(ClaimsPrincipal user, out Guid userId)

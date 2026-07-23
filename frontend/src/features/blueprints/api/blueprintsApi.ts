@@ -1,3 +1,25 @@
+export interface BlueprintSlotOption {
+  optionIndex: number
+  materialName: string
+  kind: string
+  quantity: number
+}
+
+export interface BlueprintSlot {
+  slotIndex: number
+  slotName: string
+  options: BlueprintSlotOption[]
+}
+
+export interface BlueprintDetail {
+  blueprintId: string
+  productName: string | null
+  type: string | null
+  craftTimeSeconds: number | null
+  ingredientCount: number
+  slots: BlueprintSlot[]
+}
+
 export interface BlueprintSearchResult {
   blueprintId: string
   productName: string
@@ -30,6 +52,20 @@ export async function getMyBlueprints(): Promise<MyBlueprintListResponse> {
   const res = await fetch('/api/blueprints/mine', { credentials: 'include' })
   if (!res.ok) throw new Error(`Failed to load blueprints: ${res.status}`)
   return res.json() as Promise<MyBlueprintListResponse>
+}
+
+export async function getBlueprintDetail(blueprintId: string): Promise<BlueprintDetail> {
+  const res = await fetch(`/api/blueprints/mine/${blueprintId}`, { credentials: 'include' })
+  if (!res.ok) throw Object.assign(new Error(`Failed to load blueprint detail: ${res.status}`), { status: res.status })
+  return res.json() as Promise<BlueprintDetail>
+}
+
+export async function removeMyBlueprint(blueprintId: string): Promise<void> {
+  const res = await fetch(`/api/blueprints/mine/${blueprintId}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  })
+  if (!res.ok) throw Object.assign(new Error(`Failed to remove blueprint: ${res.status}`), { status: res.status })
 }
 
 export async function addMyBlueprint(blueprintId: string): Promise<MyBlueprintListItem> {

@@ -3,9 +3,11 @@ import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import { useMyBlueprints } from '../hooks/useMyBlueprints'
 import { AddBlueprintDialog } from '../components/AddBlueprintDialog'
+import { BlueprintDetailPanel } from '../components/BlueprintDetailPanel'
 
 export function MyBlueprintsPage() {
   const [addOpen, setAddOpen] = useState(false)
+  const [selectedBlueprintId, setSelectedBlueprintId] = useState<string | null>(null)
   const { data, isLoading } = useMyBlueprints()
 
   const blueprints = data?.blueprints ?? []
@@ -38,7 +40,11 @@ export function MyBlueprintsPage() {
             </thead>
             <tbody>
               {blueprints.map((bp) => (
-                <tr key={bp.blueprintId} className="border-b last:border-0">
+                <tr
+                  key={bp.blueprintId}
+                  className="border-b last:border-0 cursor-pointer hover:bg-muted/50"
+                  onClick={() => setSelectedBlueprintId(bp.blueprintId)}
+                >
                   <td className="px-4 py-3">{bp.productName ?? '—'}</td>
                   <td className="px-4 py-3 text-muted-foreground">{bp.type ?? '—'}</td>
                   <td className="px-4 py-3">{bp.ingredientCount}</td>
@@ -50,6 +56,10 @@ export function MyBlueprintsPage() {
       )}
 
       <AddBlueprintDialog open={addOpen} onClose={() => setAddOpen(false)} />
+      <BlueprintDetailPanel
+        blueprintId={selectedBlueprintId}
+        onClose={() => setSelectedBlueprintId(null)}
+      />
     </div>
   )
 }

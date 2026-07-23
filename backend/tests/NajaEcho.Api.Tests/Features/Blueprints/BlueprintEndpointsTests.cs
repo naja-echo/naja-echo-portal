@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NajaEcho.Application.Abstractions;
+using NajaEcho.Application.Features.Blueprints.GetBlueprintDetail;
 using NajaEcho.Application.Features.Blueprints.GetMyBlueprints;
 using NajaEcho.Application.Features.Blueprints.SearchBlueprints;
 using NajaEcho.Domain.Blueprints;
@@ -200,12 +201,81 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
+    // ── GET /api/blueprints/mine/{blueprintId} ─────────────────────
+
+    [Fact]
+    public async Task GetDetail_Unauthenticated_Returns401()
+    {
+        var blueprintId = Guid.NewGuid();
+        var response = await AnonymousClient().GetAsync($"/api/blueprints/mine/{blueprintId}");
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task GetDetail_NotInUserList_Returns404()
+    {
+        var blueprintId = Guid.NewGuid();
+        var response = await AuthenticatedClient().GetAsync($"/api/blueprints/mine/{blueprintId}");
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task GetDetail_InUserList_Returns200WithDetailShape()
+    {
+        var blueprintId = Guid.NewGuid();
+        _factory.Services.GetRequiredService<FakeUserBlueprintTestRepository>()
+            .DetailResult = new BlueprintDetailDto(blueprintId, "Widget Mk1", "Weapon", 330, 2,
+                [new BlueprintSlotDto(0, "Cast Iron", [new BlueprintSlotOptionDto(0, "Iron Ore", "material", 1.5m)])]);
+
+        var response = await AuthenticatedClient().GetAsync($"/api/blueprints/mine/{blueprintId}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<DetailResponseShape>();
+        body!.BlueprintId.Should().Be(blueprintId);
+        body.ProductName.Should().Be("Widget Mk1");
+        body.CraftTimeSeconds.Should().Be(330);
+        body.Slots.Should().HaveCount(1);
+    }
+
+    // ── DELETE /api/blueprints/mine/{blueprintId} ──────────────────
+
+    [Fact]
+    public async Task RemoveMine_Unauthenticated_Returns401()
+    {
+        var blueprintId = Guid.NewGuid();
+        var response = await AnonymousClient().DeleteAsync($"/api/blueprints/mine/{blueprintId}");
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task RemoveMine_NotInUserList_Returns404()
+    {
+        var blueprintId = Guid.NewGuid();
+        var response = await AuthenticatedClient().DeleteAsync($"/api/blueprints/mine/{blueprintId}");
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task RemoveMine_InUserList_Returns204()
+    {
+        var blueprintId = Guid.NewGuid();
+        _factory.Services.GetRequiredService<FakeUserBlueprintTestRepository>()
+            .RemoveResult = true;
+
+        var response = await AuthenticatedClient().DeleteAsync($"/api/blueprints/mine/{blueprintId}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
     // ── Response shapes ───────────────────────────────────────────
 
     private sealed record ItemResponseShape(Guid BlueprintId, string? ProductName, string? Type, int IngredientCount);
     private sealed record ListResponseShape(List<ItemResponseShape> Blueprints);
     private sealed record SearchItemShape(Guid BlueprintId, string ProductName, string? Type);
     private sealed record SearchResponseShape(List<SearchItemShape> Results);
+    private sealed record SlotOptionShape(int OptionIndex, string MaterialName, string Kind, decimal Quantity);
+    private sealed record SlotShape(int SlotIndex, string SlotName, List<SlotOptionShape> Options);
+    private sealed record DetailResponseShape(Guid BlueprintId, string? ProductName, string? Type, int? CraftTimeSeconds, int IngredientCount, List<SlotShape> Slots);
 }
 
 // ── Fakes ────────────────────────────────────────────────────────
@@ -216,6 +286,8 @@ internal sealed class FakeUserBlueprintTestRepository : IUserBlueprintRepository
     public MyBlueprintListItemDto? AddResult { get; set; }
     public bool ThrowDuplicate { get; set; }
     public bool ThrowNotFound { get; set; }
+    public BlueprintDetailDto? DetailResult { get; set; }
+    public bool RemoveResult { get; set; }
 
     public void Seed(Guid userId, IEnumerable<MyBlueprintListItemDto> items)
     {
@@ -236,6 +308,12 @@ internal sealed class FakeUserBlueprintTestRepository : IUserBlueprintRepository
         if (ThrowDuplicate) throw new DuplicateBlueprintException(blueprintId);
         return Task.FromResult(AddResult ?? new MyBlueprintListItemDto(blueprintId, null, null, 0));
     }
+
+    public Task<BlueprintDetailDto?> GetDetailAsync(Guid userId, Guid blueprintId, CancellationToken ct = default) =>
+        Task.FromResult(DetailResult);
+
+    public Task<bool> RemoveAsync(Guid userId, Guid blueprintId, CancellationToken ct = default) =>
+        Task.FromResult(RemoveResult);
 }
 
 internal sealed class FakeSearchableBlueprintRepository : IBlueprintRepository
