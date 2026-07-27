@@ -14,6 +14,8 @@ public sealed class OrgBlueprintRepository(AppDbContext db) : IOrgBlueprintRepos
     private sealed record SlotOptionRow(int SlotIndex, string SlotName, int OptionIndex, string MaterialName, string Kind, decimal Quantity);
     private sealed record OwnerRow(Guid UserId, string DisplayName);
 
+    // TODO(Epic #30): filter by org scope — userId is threaded through from the endpoint but unused.
+    // Currently safe with a single org, but will leak cross-org data once multi-org lands.
     public async Task<IReadOnlyList<OrgBlueprintListItemDto>> GetListAsync(Guid userId, CancellationToken ct = default)
     {
         var rows = await db.Database.SqlQuery<ListRow>($"""
@@ -35,6 +37,8 @@ public sealed class OrgBlueprintRepository(AppDbContext db) : IOrgBlueprintRepos
             .ToList();
     }
 
+    // TODO(Epic #30): filter by org scope — userId is threaded through from the endpoint but unused.
+    // Currently safe with a single org, but will leak cross-org data once multi-org lands.
     public async Task<OrgBlueprintDetailDto?> GetDetailAsync(Guid userId, Guid blueprintId, CancellationToken ct = default)
     {
         // Verify at least one user owns this blueprint and fetch header fields

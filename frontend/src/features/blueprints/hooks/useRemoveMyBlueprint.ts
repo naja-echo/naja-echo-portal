@@ -10,6 +10,8 @@ export function useRemoveMyBlueprint() {
     onSuccess: (_data, blueprintId) => {
       void queryClient.invalidateQueries({ queryKey: blueprintKeys.mine() })
       void queryClient.invalidateQueries({ queryKey: blueprintKeys.detail(blueprintId) })
+      void queryClient.invalidateQueries({ queryKey: ['blueprints', 'org'] })
+      void queryClient.invalidateQueries({ queryKey: ['blueprints', 'org-detail'] })
     },
   })
 }

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using NajaEcho.Application.Abstractions;
 using NajaEcho.Application.Features.Blueprints.GetBlueprintDetail;
 using NajaEcho.Application.Features.Blueprints.GetMyBlueprints;
@@ -144,7 +145,5 @@ public sealed class UserBlueprintRepository(AppDbContext db) : IUserBlueprintRep
     }
 
     private static bool IsUniqueConstraintViolation(DbUpdateException ex) =>
-        ex.InnerException?.Message.Contains("ux_user_blueprints_user_blueprint",
-            StringComparison.OrdinalIgnoreCase) == true
-        || ex.InnerException?.Message.Contains("23505", StringComparison.OrdinalIgnoreCase) == true;
+        ex.InnerException is Npgsql.PostgresException { SqlState: "23505" };
 }

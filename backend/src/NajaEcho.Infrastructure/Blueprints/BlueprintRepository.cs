@@ -178,10 +178,11 @@ public sealed class BlueprintRepository(AppDbContext db) : IBlueprintRepository
 
     public async Task<IReadOnlyList<BlueprintSearchResultDto>> SearchAsync(string term, int limit = 20, CancellationToken ct = default)
     {
-        var pattern = $"%{term}%";
+        var escaped = term.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_");
+        var pattern = $"%{escaped}%";
 
         var rows = await db.Blueprints
-            .Where(b => b.ProductName != null && EF.Functions.ILike(b.ProductName, pattern))
+            .Where(b => b.ProductName != null && EF.Functions.ILike(b.ProductName, pattern, "\\"))
             .OrderBy(b => b.ProductName)
             .Take(limit)
             .Select(b => new BlueprintSearchResultDto(b.Id, b.ProductName!, b.Type))
