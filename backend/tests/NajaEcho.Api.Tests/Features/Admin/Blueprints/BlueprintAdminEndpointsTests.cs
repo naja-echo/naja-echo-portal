@@ -267,6 +267,10 @@ internal sealed class FakeBlueprintRepository : IBlueprintRepository
 
     public Task<IReadOnlyList<BlueprintListItemDto>> GetListAsync(CancellationToken ct = default) =>
         Task.FromResult(List);
+
+    public Task<IReadOnlyList<NajaEcho.Application.Features.Blueprints.SearchBlueprints.BlueprintSearchResultDto>> SearchAsync(
+        string term, int limit = 20, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<NajaEcho.Application.Features.Blueprints.SearchBlueprints.BlueprintSearchResultDto>>([]);
 }
 
 internal sealed class FakeBlueprintLoginService : IExternalLoginService

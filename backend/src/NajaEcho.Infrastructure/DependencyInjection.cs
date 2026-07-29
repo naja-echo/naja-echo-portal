@@ -4,8 +4,15 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NajaEcho.Application.Abstractions;
 using NajaEcho.Application.Features.Auth.GetCurrentUser;
+using NajaEcho.Application.Features.Blueprints.AddMyBlueprint;
+using NajaEcho.Application.Features.Blueprints.GetBlueprintDetail;
 using NajaEcho.Application.Features.Blueprints.GetBlueprints;
+using NajaEcho.Application.Features.Blueprints.GetMyBlueprints;
+using NajaEcho.Application.Features.Blueprints.GetOrgBlueprintDetail;
+using NajaEcho.Application.Features.Blueprints.GetOrgBlueprints;
 using NajaEcho.Application.Features.Blueprints.ImportBlueprints;
+using NajaEcho.Application.Features.Blueprints.RemoveMyBlueprint;
+using NajaEcho.Application.Features.Blueprints.SearchBlueprints;
 using NajaEcho.Application.Features.Auth.SignInWithDiscord;
 using NajaEcho.Application.Features.Hangar.AddShipToHangar;
 using NajaEcho.Application.Features.Hangar.GetMyHangar;
@@ -230,6 +237,19 @@ public static class DependencyInjection
         services.AddScoped<IBlueprintRepository, BlueprintRepository>();
         services.AddScoped<ImportBlueprintsHandler>();
         services.AddScoped<GetBlueprintsHandler>();
+        services.AddScoped<SearchBlueprintsHandler>();
+
+        // User Blueprints
+        services.AddScoped<IUserBlueprintRepository, UserBlueprintRepository>();
+        services.AddScoped<GetMyBlueprintsHandler>();
+        services.AddScoped<AddMyBlueprintHandler>();
+        services.AddScoped<GetBlueprintDetailHandler>();
+        services.AddScoped<RemoveMyBlueprintHandler>();
+
+        // Org Blueprints
+        services.AddScoped<IOrgBlueprintRepository, OrgBlueprintRepository>();
+        services.AddScoped<GetOrgBlueprintsHandler>();
+        services.AddScoped<GetOrgBlueprintDetailHandler>();
 
         return services;
     }

@@ -1,0 +1,160 @@
+openapi: 3.0.3
+info:
+  title: NajaEchoPortal — Blueprints API
+  version: 1.0.0
+  description: >
+    Personal Blueprint Manager endpoints. Users can search the blueprint catalog by product name
+    and manage a personal list of saved blueprints. Blueprint catalog data (product_name, type,
+    ingredient slots) is read-only — populated by the admin import workflow. User blueprint
+    associations are stored in the user_blueprints table, scoped to the authenticated user.
+    All endpoints require an authenticated session (cookie auth).
+
+servers:
+  - url: /
+
+tags:
+  - name: Blueprints
+
+paths:
+  /api/blueprints/search:
+    get:
+      tags: [Blueprints]
+      summary: Search the blueprint catalog by product name (autosuggest)
+      operationId: searchBlueprints
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          description: Partial or full product name to search for (case-insensitive)
+      responses:
+        '200':
+          description: Matching blueprint catalog entries (max 20).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BlueprintSearchResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/blueprints/mine:
+    get:
+      tags: [Blueprints]
+      summary: List the current user's personal blueprints
+      operationId: getMyBlueprints
+      responses:
+        '200':
+          description: The authenticated user's saved blueprint list.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MyBlueprintListResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+    post:
+      tags: [Blueprints]
+      summary: Add a catalog blueprint to the current user's personal list
+      operationId: addMyBlueprint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AddMyBlueprintRequest' }
+      responses:
+        '201':
+          description: Blueprint added successfully.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MyBlueprintListItem' }
+        '400':
+          description: Validation error (missing or invalid blueprintId).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+        '404':
+          description: Blueprint not found in the catalog.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+        '409':
+          description: Blueprint already in the user's personal list.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+components:
+  schemas:
+    BlueprintSearchResult:
+      type: object
+      required: [blueprintId, productName]
+      properties:
+        blueprintId:
+          type: string
+          format: uuid
+          description: Catalog blueprint identifier (used as value on selection)
+        productName:
+          type: string
+          description: Display name shown in the autosuggest dropdown
+        type:
+          type: string
+          nullable: true
+          description: Blueprint type (optional secondary label)
+
+    BlueprintSearchResponse:
+      type: object
+      required: [results]
+      properties:
+        results:
+          type: array
+          items: { $ref: '#/components/schemas/BlueprintSearchResult' }
+
+    MyBlueprintListItem:
+      type: object
+      required: [blueprintId, ingredientCount]
+      properties:
+        blueprintId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+          nullable: true
+          description: Blueprint column value
+        type:
+          type: string
+          nullable: true
+          description: Type column value
+        ingredientCount:
+          type: integer
+          description: Number of distinct ingredient slots in tier 0 of the blueprint
+
+    MyBlueprintListResponse:
+      type: object
+      required: [blueprints]
+      properties:
+        blueprints:
+          type: array
+          items: { $ref: '#/components/schemas/MyBlueprintListItem' }
+
+    AddMyBlueprintRequest:
+      type: object
+      required: [blueprintId]
+      properties:
+        blueprintId:
+          type: string
+          format: uuid
+          description: The catalog blueprint to add to the user's personal list
+
+    ProblemDetails:
+      type: object
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+
+  responses:
+    Unauthorized:
+      description: Not authenticated.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }

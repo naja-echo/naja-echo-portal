@@ -262,6 +262,9 @@ namespace NajaEcho.Infrastructure.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("pk_blueprints");
 
+                    b.HasIndex("ProductName")
+                        .HasDatabaseName("ix_blueprints_product_name");
+
                     b.ToTable("blueprints", "sc");
                 });
 
@@ -354,6 +357,10 @@ namespace NajaEcho.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_blueprint_tiers");
+
+                    b.HasIndex("BlueprintId")
+                        .HasDatabaseName("ix_blueprint_tiers_blueprint_id_tier0")
+                        .HasFilter("tier_index = 0");
 
                     b.HasIndex("BlueprintId", "TierIndex")
                         .IsUnique()
@@ -476,6 +483,41 @@ namespace NajaEcho.Infrastructure.Persistence.Migrations
                         .HasName("pk_crafting_properties");
 
                     b.ToTable("crafting_properties", "sc");
+                });
+
+            modelBuilder.Entity("NajaEcho.Domain.Blueprints.UserBlueprint", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("AddedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("added_at");
+
+                    b.Property<Guid>("BlueprintId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("blueprint_id");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_user_blueprints");
+
+                    b.HasIndex("BlueprintId")
+                        .HasDatabaseName("ix_user_blueprints_blueprint_id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_user_blueprints_user_id");
+
+                    b.HasIndex("UserId", "BlueprintId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_user_blueprints_user_blueprint");
+
+                    b.ToTable("user_blueprints", "public");
                 });
 
             modelBuilder.Entity("NajaEcho.Domain.Characters.Character", b =>
@@ -1928,6 +1970,16 @@ namespace NajaEcho.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_blueprint_tiers_blueprint_id");
+                });
+
+            modelBuilder.Entity("NajaEcho.Domain.Blueprints.UserBlueprint", b =>
+                {
+                    b.HasOne("NajaEcho.Domain.Blueprints.CraftingBlueprint", null)
+                        .WithMany()
+                        .HasForeignKey("BlueprintId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_blueprints_blueprint_id");
                 });
 
             modelBuilder.Entity("NajaEcho.Domain.Characters.Character", b =>

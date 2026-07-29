@@ -31,5 +31,7 @@ public sealed class CraftingBlueprintConfiguration : IEntityTypeConfiguration<Cr
 
         builder.Property(b => b.ImportedAt).HasColumnName("imported_at").IsRequired();
         builder.Property(b => b.UpdatedAt).HasColumnName("updated_at").IsRequired();
+
+        builder.HasIndex(b => b.ProductName).HasDatabaseName("ix_blueprints_product_name");
     }
 }

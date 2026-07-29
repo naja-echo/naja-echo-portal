@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using NajaEcho.Application.Abstractions;
 using NajaEcho.Application.Features.Blueprints.GetBlueprints;
 using NajaEcho.Application.Features.Blueprints.ImportBlueprints;
+using NajaEcho.Application.Features.Blueprints.SearchBlueprints;
 using NajaEcho.Domain.Blueprints;
 using NajaEcho.Infrastructure.Persistence;
 
@@ -173,6 +174,21 @@ public sealed class BlueprintRepository(AppDbContext db) : IBlueprintRepository
         return list
             .OrderBy(x => x.DisplayName, StringComparer.OrdinalIgnoreCase)
             .ToList();
+    }
+
+    public async Task<IReadOnlyList<BlueprintSearchResultDto>> SearchAsync(string term, int limit = 20, CancellationToken ct = default)
+    {
+        var escaped = term.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_");
+        var pattern = $"%{escaped}%";
+
+        var rows = await db.Blueprints
+            .Where(b => b.ProductName != null && EF.Functions.ILike(b.ProductName, pattern, "\\"))
+            .OrderBy(b => b.ProductName)
+            .Take(limit)
+            .Select(b => new BlueprintSearchResultDto(b.Id, b.ProductName!, b.Type))
+            .ToListAsync(ct);
+
+        return rows;
     }
 
     private static void UpdateBlueprint(CraftingBlueprint stored, CraftingBlueprint inc, DateTimeOffset now)

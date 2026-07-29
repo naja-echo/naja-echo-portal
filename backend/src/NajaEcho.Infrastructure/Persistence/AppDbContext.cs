@@ -56,6 +56,7 @@ public sealed class AppDbContext(
     public DbSet<CraftingBlueprint> Blueprints => Set<CraftingBlueprint>();
     public DbSet<CraftingBlueprintTier> BlueprintTiers => Set<CraftingBlueprintTier>();
     public DbSet<CraftingBlueprintSlotOption> BlueprintSlotOptions => Set<CraftingBlueprintSlotOption>();
+    public DbSet<UserBlueprint> UserBlueprints => Set<UserBlueprint>();
     public DbSet<CraftingMaterial> CraftingMaterials => Set<CraftingMaterial>();
     public DbSet<CraftingProperty> CraftingProperties => Set<CraftingProperty>();
     public DbSet<CraftingDataset> CraftingDatasets => Set<CraftingDataset>();
@@ -82,6 +83,7 @@ public sealed class AppDbContext(
         modelBuilder.ApplyConfiguration(new LootLedgerEntryConfiguration());
         modelBuilder.ApplyConfiguration(new LootMemberStandingConfiguration());
         modelBuilder.ApplyConfiguration(new CraftingBlueprintConfiguration());
+        modelBuilder.ApplyConfiguration(new UserBlueprintConfiguration());
         modelBuilder.ApplyConfiguration(new CraftingBlueprintTierConfiguration());
         modelBuilder.ApplyConfiguration(new CraftingBlueprintSlotOptionConfiguration());
         modelBuilder.ApplyConfiguration(new CraftingMaterialConfiguration());

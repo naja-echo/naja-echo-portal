@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { BarChart2, Coins, Database, LayoutDashboard, Package, Ship, Users } from 'lucide-react'
+import { BarChart2, Coins, Database, LayoutDashboard, Package, ScrollText, Ship, Users } from 'lucide-react'
 import { ROLES, type Role } from '@/features/auth/lib/roles'
 
 export interface NavItem {
@@ -19,6 +19,8 @@ export const navItems: NavItem[] = [
   { label: 'Items', path: '/warehouse/items', icon: Package, group: 'Warehouse' },
   { label: 'Ship Components', path: '/warehouse/ship-components', icon: Package, group: 'Warehouse' },
   { label: 'Materials', path: '/warehouse/materials', icon: Package, group: 'Warehouse' },
+  { label: 'My Blueprints', path: '/blueprints/personal', icon: ScrollText, group: 'Blueprints' },
+  { label: 'Org Blueprints', path: '/blueprints/org', icon: ScrollText, group: 'Blueprints' },
   { label: 'My Loot', path: '/crew-resources/my-loot', icon: Coins, group: 'Crew Resources' },
   {
     label: 'Loot Distribution',

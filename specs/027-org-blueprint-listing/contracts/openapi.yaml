@@ -1,0 +1,157 @@
+openapi: 3.1.0
+info:
+  title: NajaEcho Portal API — Org Blueprint Listing (Feature 027)
+  version: "1.0.0"
+  description: |
+    New endpoints added by feature 027: Org Blueprint Listing.
+    All endpoints require an authenticated session cookie.
+
+paths:
+  /api/blueprints/org:
+    get:
+      summary: List all org blueprints
+      description: |
+        Returns a deduplicated list of all blueprints held by any member of the
+        authenticated user's current organization. Each blueprint appears once
+        regardless of how many members have it.
+      operationId: getOrgBlueprints
+      tags: [Blueprints]
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Deduplicated list of org blueprints
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrgBlueprintListResponse"
+        "401":
+          description: Not authenticated
+
+  /api/blueprints/org/{blueprintId}:
+    get:
+      summary: Get org blueprint detail
+      description: |
+        Returns full detail for a specific blueprint, provided at least one org member
+        has it. Includes ingredient slots and a list of org members who own it.
+        Returns 404 if no org member has this blueprint.
+      operationId: getOrgBlueprintDetail
+      tags: [Blueprints]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: blueprintId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Blueprint detail with ingredient list and owner list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrgBlueprintDetailResponse"
+        "401":
+          description: Not authenticated
+        "404":
+          description: Blueprint not held by any org member
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: __Host-session
+
+  schemas:
+    OrgBlueprintListResponse:
+      type: object
+      required: [blueprints]
+      properties:
+        blueprints:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrgBlueprintListItem"
+
+    OrgBlueprintListItem:
+      type: object
+      required: [blueprintId, ingredientCount]
+      properties:
+        blueprintId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+          nullable: true
+        type:
+          type: string
+          nullable: true
+        ingredientCount:
+          type: integer
+
+    OrgBlueprintDetailResponse:
+      type: object
+      required: [blueprintId, ingredientCount, slots, owners]
+      properties:
+        blueprintId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+          nullable: true
+        type:
+          type: string
+          nullable: true
+        craftTimeSeconds:
+          type: integer
+          nullable: true
+        ingredientCount:
+          type: integer
+        slots:
+          type: array
+          items:
+            $ref: "#/components/schemas/BlueprintSlotResponse"
+        owners:
+          type: array
+          items:
+            $ref: "#/components/schemas/BlueprintOwnerResponse"
+
+    BlueprintSlotResponse:
+      type: object
+      required: [slotIndex, slotName, options]
+      properties:
+        slotIndex:
+          type: integer
+        slotName:
+          type: string
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/BlueprintSlotOptionResponse"
+
+    BlueprintSlotOptionResponse:
+      type: object
+      required: [optionIndex, materialName, kind, quantity]
+      properties:
+        optionIndex:
+          type: integer
+        materialName:
+          type: string
+        kind:
+          type: string
+        quantity:
+          type: number
+          format: decimal
+
+    BlueprintOwnerResponse:
+      type: object
+      required: [userId, displayName]
+      properties:
+        userId:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+          description: Member's display name; falls back to Discord username if empty
