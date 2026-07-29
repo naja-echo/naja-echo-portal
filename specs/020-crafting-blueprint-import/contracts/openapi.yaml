@@ -1,0 +1,196 @@
+openapi: 3.0.3
+info:
+  title: NajaEchoPortal — Crafting Blueprint Import & Listing
+  description: >
+    Admin-only endpoints for feature 020-crafting-blueprint-import. The import request body is the
+    crafting blueprint dataset document itself (the parsed contents of the uploaded JSON file),
+    whose authoritative shape is defined in ./star-citizen-blueprints.schema.json. The endpoint
+    accepts a raised request body size limit of 50 MB.
+  version: 1.0.0
+paths:
+  /api/admin/blueprints/import:
+    post:
+      operationId: importBlueprints
+      summary: Import a crafting blueprint dataset (synchronous)
+      description: >
+        Validates and imports a complete dataset snapshot. Top-level structure (version, meta,
+        dismantle, properties, resources, items, blueprints) must be wholesale valid or the entire
+        request is rejected with 400 and nothing stored. Individual malformed blueprint entries
+        are rejected and reported without failing the import. Reference data (properties,
+        resources, items, dismantle config, dataset version) is replaced; blueprints are upserted
+        by guid, and each blueprint's queryable tier/slot-option records are rebuilt. Every
+        material name is resolved to a catalog UUID (commodities checked first, then items;
+        case-insensitive exact match; unmatched names produce warnings, never rejections). The
+        reference-data refresh and all valid blueprint upserts commit in a single atomic
+        transaction. Only one import (of any catalog type) may run at a time.
+      tags: [Blueprints]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './star-citizen-blueprints.schema.json'
+      responses:
+        '200':
+          description: Import completed (possibly with per-entry rejections and/or warnings).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportBlueprintsResponse'
+        '400':
+          description: >
+            Invalid JSON, missing/invalid required top-level section, or body otherwise not a
+            valid dataset document. Nothing was stored.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Another import is already in progress.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '413':
+          description: Request body exceeds the 50 MB limit.
+  /api/admin/blueprints:
+    get:
+      operationId: getBlueprints
+      summary: List all known blueprints with computed display names
+      description: >
+        Returns every stored blueprint with its server-computed display name using the fallback
+        chain productName → linked sc.items name (matched on items.uuid = blueprint guid,
+        soft-deleted items excluded) → tag → guid. Unpaginated (dataset scale ≤ ~5,000); the
+        client filters by name substring.
+      tags: [Blueprints]
+      responses:
+        '200':
+          description: Full blueprint list, ordered by display name (case-insensitive).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlueprintListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+components:
+  responses:
+    Unauthorized:
+      description: Not authenticated.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    Forbidden:
+      description: Authenticated but not an Admin.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+  schemas:
+    ProblemDetails:
+      type: object
+      description: RFC 7807 problem details.
+      properties:
+        type: { type: string, nullable: true }
+        title: { type: string, nullable: true }
+        status: { type: integer, nullable: true }
+        detail: { type: string, nullable: true }
+      additionalProperties: true
+    ImportBlueprintsResponse:
+      type: object
+      required: [version, blueprints, resources, items, properties, referenceDataReplaced, warnings, rejections]
+      properties:
+        version:
+          type: string
+          description: Dataset version from the uploaded file (FR-010).
+          example: 1.4.0
+        blueprints:
+          $ref: '#/components/schemas/CollectionCounts'
+        resources:
+          $ref: '#/components/schemas/CollectionCounts'
+        items:
+          $ref: '#/components/schemas/CollectionCounts'
+        properties:
+          $ref: '#/components/schemas/CollectionCounts'
+        referenceDataReplaced:
+          type: boolean
+          description: True when properties/resources/items/dismantle config were replaced by this upload (FR-019).
+        warnings:
+          type: array
+          description: >
+            Non-fatal warnings: meta totals not matching parsed counts (FR-021) and material
+            names that matched neither the commodities nor the items catalog (FR-009).
+          items:
+            type: string
+          example:
+            - "meta.totalBlueprints is 1200 but 1198 blueprint entries were parsed"
+            - "material 'Savrilium Ore' matched no commodity or item; stored unlinked"
+        rejections:
+          type: array
+          description: One entry per rejected blueprint (FR-020).
+          items:
+            $ref: '#/components/schemas/BlueprintRejection'
+    CollectionCounts:
+      type: object
+      required: [read, inserted, updated, rejected]
+      properties:
+        read:
+          type: integer
+          description: Entries present in the uploaded file for this collection.
+        inserted:
+          type: integer
+        updated:
+          type: integer
+          description: Always 0 for reference collections (they are replaced, not merged).
+        rejected:
+          type: integer
+    BlueprintRejection:
+      type: object
+      required: [reason]
+      properties:
+        guid:
+          type: string
+          nullable: true
+          description: The entry's guid when it could be read (may be malformed or absent).
+        productName:
+          type: string
+          nullable: true
+        reason:
+          type: string
+          example: "guid is not a valid UUID"
+    BlueprintListResponse:
+      type: object
+      required: [blueprints]
+      properties:
+        blueprints:
+          type: array
+          items:
+            $ref: '#/components/schemas/BlueprintListItem'
+    BlueprintListItem:
+      type: object
+      required: [guid, displayName, nameSource]
+      properties:
+        guid:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+          description: "Fallback chain: productName → linked item name → tag → guid (FR-022)."
+        nameSource:
+          type: string
+          enum: [productName, linkedItem, tag, guid]
+          description: Which fallback produced displayName (also indicates whether the blueprint is item-linked).
+        productName:
+          type: string
+          nullable: true
+        tag:
+          type: string
+        manufacturer:
+          type: string
+          nullable: true

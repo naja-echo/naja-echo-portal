@@ -18,6 +18,7 @@ using NajaEcho.Application.Features.Warehouse.Materials.GetMaterials;
 using NajaEcho.Application.Features.Warehouse.Materials.SearchCommodities;
 using NajaEcho.Infrastructure.Persistence;
 using Xunit;
+using NajaEcho.Domain.Organizations;
 
 namespace NajaEcho.Api.Tests.Features.Warehouse;
 
@@ -45,7 +46,7 @@ public sealed class MaterialsEndpointTests : IClassFixture<WebApplicationFactory
 
             b.ConfigureTestServices(services =>
             {
-                services.ReplaceWithInMemoryDb("MaterialsTestDb_" + Guid.NewGuid());
+                services.StubDatabase();
 
                 services.RemoveAll<IExternalLoginService>();
                 services.AddSingleton<IExternalLoginService, MaterialsFakeLoginService>();
@@ -452,6 +453,10 @@ internal sealed class MaterialsFakeUserRepo : IUserRepository
     public Task<IReadOnlyList<NajaEcho.Application.Features.Admin.Users.GetUsers.AdminUserDto>> GetUsersWithRolesAndCharactersAsync(CancellationToken ct) =>
         Task.FromResult<IReadOnlyList<NajaEcho.Application.Features.Admin.Users.GetUsers.AdminUserDto>>([]);
     public Task SetRolesAsync(Guid userId, IReadOnlyList<string> roles, CancellationToken ct) => Task.CompletedTask;
+
+
+    public Task<IReadOnlyList<string>> GetRolesAsync(Guid userId, CancellationToken ct) =>
+        Task.FromResult<IReadOnlyList<string>>([]);
 }
 
 internal sealed class MaterialsFakeLoginService : IExternalLoginService

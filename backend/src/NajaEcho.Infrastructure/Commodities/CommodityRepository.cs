@@ -45,6 +45,11 @@ public sealed class CommodityRepository(AppDbContext db) : ICommodityRepository
 
         await using var tx = await db.Database.BeginTransactionAsync(ct);
 
+        // The UEX commodities feed never carries uuid/slug — those live on the linked catalog
+        // item (commodity.id_item == items.uex_id). Resolve them from sc.items so both the
+        // insert and update paths (which read from `inc`) pick up the values.
+        await ResolveItemLinksAsync(incomingByUexId.Values, ct);
+
         var existing = await db.Commodities
             .Where(c => incomingIds.Contains(c.UexId))
             .ToListAsync(ct);
@@ -196,4 +201,41 @@ public sealed class CommodityRepository(AppDbContext db) : ICommodityRepository
         stored.IsFuel != inc.IsFuel ||
         stored.SourceDateAdded != inc.SourceDateAdded ||
         stored.SourceDateModified != inc.SourceDateModified;
+
+    // Populate each commodity's Uuid/Slug from its linked item (id_item -> items.uex_id),
+    // excluding soft-deleted items and picking a deterministic winner on duplicate uex_id.
+    // Unmatched commodities keep their existing (null) values.
+    private async Task ResolveItemLinksAsync(IEnumerable<Commodity> incoming, CancellationToken ct)
+    {
+        var itemUexIds = incoming
+            .Where(c => c.IdItem is > 0)
+            .Select(c => c.IdItem!.Value)
+            .ToHashSet();
+
+        if (itemUexIds.Count == 0)
+        {
+            return;
+        }
+
+        var links = await db.Items
+            .AsNoTracking()
+            .Where(i => itemUexIds.Contains(i.UexId) && i.SoftDeletedAt == null)
+            .Select(i => new { i.UexId, i.Uuid, i.Slug })
+            .ToListAsync(ct);
+
+        var linkByUexId = links
+            .GroupBy(i => i.UexId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderByDescending(x => !string.IsNullOrEmpty(x.Uuid)).ThenBy(x => x.Uuid).First());
+
+        foreach (var inc in incoming)
+        {
+            if (inc.IdItem is int idItem && linkByUexId.TryGetValue(idItem, out var link))
+            {
+                inc.Uuid = link.Uuid;
+                inc.Slug = link.Slug;
+            }
+        }
+    }
 }

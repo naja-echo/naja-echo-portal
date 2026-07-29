@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { hasAnyRole } from '@/features/auth/lib/roles'
 import type { NavItem } from '../navigation/navItems'
 
 interface DashboardNavProps {
@@ -9,10 +10,9 @@ interface DashboardNavProps {
 }
 
 export function DashboardNav({ items, roles = [], onNavigate }: DashboardNavProps) {
-  const visibleItems = items.filter((item) => {
-    if (item.access === 'admin') return roles.includes('Admin')
-    return true
-  })
+  // An item without `access` is open to any authenticated user; otherwise it needs one of the
+  // listed roles (or Admin, per the shared rule).
+  const visibleItems = items.filter((item) => !item.access || hasAnyRole(roles, item.access))
 
   // Group items by their group label, preserving insertion order
   const sections: Array<{ group?: string; items: NavItem[] }> = []

@@ -44,7 +44,7 @@ public sealed class ImportHangarEndpointTests : IClassFixture<WebApplicationFact
 
             b.ConfigureTestServices(services =>
             {
-                services.ReplaceWithInMemoryDb("ImportHangarTestDb_" + Guid.NewGuid());
+                services.StubDatabase();
 
                 services.RemoveAll<IExternalLoginService>();
                 services.AddSingleton<IExternalLoginService, FakeHangarLoginService>();

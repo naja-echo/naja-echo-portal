@@ -3,6 +3,7 @@ import { ShipsImportTab } from '../components/ShipsImportTab'
 import { ItemsImportTab } from '../components/ItemsImportTab'
 import { CommoditiesImportTab } from '../components/CommoditiesImportTab'
 import { LocationsImportTab } from '../components/LocationsImportTab'
+import { BlueprintsImportTab } from '../components/BlueprintsImportTab'
 
 export function DataImportPage() {
   return (
@@ -18,6 +19,7 @@ export function DataImportPage() {
           <TabsTrigger value="items">Items</TabsTrigger>
           <TabsTrigger value="commodities">Commodities</TabsTrigger>
           <TabsTrigger value="locations">Locations</TabsTrigger>
+          <TabsTrigger value="blueprints">Blueprints</TabsTrigger>
         </TabsList>
         <TabsContent value="ships">
           <ShipsImportTab />
@@ -30,6 +32,9 @@ export function DataImportPage() {
         </TabsContent>
         <TabsContent value="locations">
           <LocationsImportTab />
+        </TabsContent>
+        <TabsContent value="blueprints">
+          <BlueprintsImportTab />
         </TabsContent>
       </Tabs>
     </div>

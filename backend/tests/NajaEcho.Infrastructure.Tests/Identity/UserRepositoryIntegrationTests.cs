@@ -4,57 +4,41 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using NajaEcho.Application.Features.Characters.VerifyCharacter;
 using NajaEcho.Domain.Characters;
+using NajaEcho.Domain.Users;
 using NajaEcho.Infrastructure.Characters;
 using NajaEcho.Infrastructure.Identity;
 using NajaEcho.Infrastructure.Persistence;
-using Testcontainers.PostgreSql;
 using Xunit;
 
 namespace NajaEcho.Infrastructure.Tests.Identity;
 
+[Collection(PostgresCollection.Name)]
 public sealed class UserRepositoryIntegrationTests : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _pg = new PostgreSqlBuilder()
-        .WithDatabase("najaecho_test")
-        .WithUsername("test")
-        .WithPassword("test")
-        .Build();
-
+    private readonly PostgresFixture _fixture;
+    private readonly List<IServiceScope> _scopes = [];
     private ServiceProvider _serviceProvider = null!;
     private AppDbContext _db = null!;
 
+    public UserRepositoryIntegrationTests(PostgresFixture fixture) => _fixture = fixture;
+
     public async Task InitializeAsync()
     {
-        await _pg.StartAsync();
-
-        var services = new ServiceCollection();
-        services.AddLogging();
-        services.AddDbContext<AppDbContext>(opts =>
-            opts.UseNpgsql(_pg.GetConnectionString())
-                .UseSnakeCaseNamingConvention());
-        services.AddIdentityCore<ApplicationUser>()
-            .AddRoles<IdentityRole<Guid>>()
-            .AddEntityFrameworkStores<AppDbContext>();
-
-        _serviceProvider = services.BuildServiceProvider();
-
-        using var scope = _serviceProvider.CreateScope();
-        _db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await _db.Database.MigrateAsync();
-
-        // Keep a long-lived DbContext for direct seeding
-        var opts = new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql(_pg.GetConnectionString())
-            .UseSnakeCaseNamingConvention()
-            .Options;
-        _db = new AppDbContext(opts);
+        await _fixture.ResetAsync();
+        _serviceProvider = _fixture.BuildIdentityProvider();
+        _db = _fixture.CreateContext();
     }
 
     public async Task DisposeAsync()
     {
+        foreach (var scope in _scopes)
+        {
+            scope.Dispose();
+        }
+
+        _scopes.Clear();
         await _serviceProvider.DisposeAsync();
         await _db.DisposeAsync();
-        await _pg.DisposeAsync();
     }
 
     private ApplicationUser AddUser(string name = "Test")
@@ -96,9 +80,12 @@ public sealed class UserRepositoryIntegrationTests : IAsyncLifetime
         await _db.SaveChangesAsync();
     }
 
+    // The scope must outlive the returned repository — UserManager is scoped, and disposing the
+    // scope here would leave the repository holding a disposed UserManager.
     private UserRepository MakeUserRepo()
     {
-        using var scope = _serviceProvider.CreateScope();
+        var scope = _serviceProvider.CreateScope();
+        _scopes.Add(scope);
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         return new UserRepository(_db, userManager);
     }
@@ -172,6 +159,62 @@ public sealed class UserRepositoryIntegrationTests : IAsyncLifetime
         var dto = result.Single(u => u.Id == user.Id);
         dto.Characters.Should().HaveCount(2);
         dto.Characters.Select(c => c.Handle).Should().Contain(["charone", "chartwo"]);
+    }
+
+    // ── GetRolesAsync: the read behind cookie role refresh ───────────────────
+
+    [Fact]
+    public async Task GetRoles_ReturnsEveryRoleTheUserHolds()
+    {
+        var user = AddUser("Holder");
+        await _db.SaveChangesAsync();
+        var adminRole = await AddRoleAsync(Roles.Admin);
+        var qmRole = await AddRoleAsync(Roles.Quartermaster);
+        await AssignRoleAsync(user.Id, adminRole.Id);
+        await AssignRoleAsync(user.Id, qmRole.Id);
+
+        var repo = MakeUserRepo();
+        var roles = await repo.GetRolesAsync(user.Id, CancellationToken.None);
+
+        roles.Should().BeEquivalentTo([Roles.Admin, Roles.Quartermaster]);
+    }
+
+    [Fact]
+    public async Task GetRoles_UserWithNoRoles_ReturnsEmpty()
+    {
+        var user = AddUser("Roleless");
+        await _db.SaveChangesAsync();
+
+        var repo = MakeUserRepo();
+        var roles = await repo.GetRolesAsync(user.Id, CancellationToken.None);
+
+        roles.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetRoles_UnknownUser_ReturnsEmptyRatherThanThrowing()
+    {
+        var repo = MakeUserRepo();
+
+        var roles = await repo.GetRolesAsync(Guid.NewGuid(), CancellationToken.None);
+
+        roles.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task SetRoles_ReplacesThePreviousSet()
+    {
+        var user = AddUser("Switcher");
+        await _db.SaveChangesAsync();
+        var qmRole = await AddRoleAsync(Roles.Quartermaster);
+        await AddRoleAsync(Roles.CrewResourceOfficer);
+        await AssignRoleAsync(user.Id, qmRole.Id);
+
+        var repo = MakeUserRepo();
+        await repo.SetRolesAsync(user.Id, [Roles.CrewResourceOfficer], CancellationToken.None);
+
+        var roles = await repo.GetRolesAsync(user.Id, CancellationToken.None);
+        roles.Should().BeEquivalentTo([Roles.CrewResourceOfficer]);
     }
 
     // ── US2: Admin insert honours unique handle index ────────────────────────

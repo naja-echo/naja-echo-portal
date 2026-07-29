@@ -1,15 +1,14 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
+using NajaEcho.Domain.Users;
 
 namespace NajaEcho.Infrastructure.Identity;
 
 public sealed class RoleSeeder(RoleManager<IdentityRole<Guid>> roleManager, ILogger<RoleSeeder> logger)
 {
-    private static readonly string[] Roles = ["Admin", "Quartermaster", "CrewResourceOfficer"];
-
     public async Task SeedAsync(CancellationToken ct = default)
     {
-        foreach (var role in Roles)
+        foreach (var role in Roles.All)
         {
             if (await roleManager.RoleExistsAsync(role))
             {

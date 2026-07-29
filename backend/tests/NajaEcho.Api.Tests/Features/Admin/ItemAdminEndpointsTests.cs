@@ -39,7 +39,7 @@ public class ItemAdminEndpointsTests : IClassFixture<WebApplicationFactory<Progr
 
             b.ConfigureTestServices(services =>
             {
-                services.ReplaceWithInMemoryDb("ItemApiTestDb_" + Guid.NewGuid());
+                services.StubDatabase();
 
                 services.RemoveAll<IExternalLoginService>();
                 services.AddSingleton<IExternalLoginService, FakeItemTestLoginService>();

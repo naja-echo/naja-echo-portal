@@ -1,9 +1,7 @@
 using System.Runtime.CompilerServices;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Options;
-using NajaEcho.Infrastructure.Persistence;
+using NajaEcho.Infrastructure.Identity;
 using Xunit;
 
 namespace NajaEcho.Api.Tests;
@@ -23,24 +21,13 @@ public sealed class ApiTestCollection;
 
 internal static class TestServiceCollectionExtensions
 {
-    internal static IServiceCollection ReplaceWithInMemoryDb(this IServiceCollection services, string dbName)
+    // These endpoint tests fake every repository, so AppDbContext is never queried by the code
+    // under test. The only component that touches the database is the RoleSeeder that runs at host
+    // startup (Program.cs, already guarded as non-fatal). Removing it keeps AppDbContext from ever
+    // being resolved, so no database — real or in-memory — is needed to exercise the endpoints.
+    internal static IServiceCollection StubDatabase(this IServiceCollection services)
     {
-        // Remove the pre-built options object
-        services.RemoveAll<DbContextOptions<AppDbContext>>();
-        services.RemoveAll<AppDbContext>();
-
-        // Also remove the IConfigureOptions callbacks that register Npgsql — these accumulate
-        // and cause EF Core to see both Npgsql and InMemory providers on the same options builder
-        var configDescriptors = services
-            .Where(d => d.ServiceType == typeof(IConfigureOptions<DbContextOptions<AppDbContext>>))
-            .ToList();
-        foreach (var d in configDescriptors)
-            services.Remove(d);
-
-        services.AddDbContext<AppDbContext>(opts =>
-            opts.UseInMemoryDatabase(dbName)
-                .EnableServiceProviderCaching(false));
-
+        services.RemoveAll<RoleSeeder>();
         return services;
     }
 }

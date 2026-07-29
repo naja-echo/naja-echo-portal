@@ -5,7 +5,8 @@ import { http, HttpResponse } from 'msw'
 import { server } from '@/tests/server'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { AdminRoute } from '@/features/auth/AdminRoute'
+import { RoleRoute } from '@/features/auth/RoleRoute'
+import { ROLES } from '@/features/auth/lib/roles'
 import { AdminUsersPage } from '../pages/AdminUsersPage'
 
 const adminSession = {
@@ -36,18 +37,21 @@ const sampleUsers = [
     characters: [
       { id: 'c0000001-0000-4000-a000-000000000001', name: 'AliceChar', handle: 'alicehandle' },
     ],
+    organization: { id: '9b8ac811-3cec-421c-8cfb-cc56f775ad5a', name: 'Naja Echo' },
   },
   {
     id: 'a0000002-0000-4000-a000-000000000002',
     authName: 'bob',
     roles: ['Quartermaster'],
     characters: [],
+    organization: null,
   },
   {
     id: 'a0000003-0000-4000-a000-000000000003',
     authName: 'charlie',
     roles: [],
     characters: [],
+    organization: null,
   },
 ]
 
@@ -63,7 +67,7 @@ function renderUsersPage(session = adminSession, initialRoute = '/dashboard/admi
         <MemoryRouter initialEntries={[initialRoute]}>
           <Routes>
             <Route path="/dashboard" element={<div>Dashboard</div>} />
-            <Route element={<AdminRoute />}>
+            <Route element={<RoleRoute allow={[ROLES.Admin]} />}>
               <Route path="/dashboard/admin/users" element={<AdminUsersPage />} />
             </Route>
           </Routes>
@@ -167,13 +171,13 @@ describe('AdminUsersPage — filtering', () => {
 })
 
 describe('AdminUsersPage — access control', () => {
-  it('non-admin navigating to /dashboard/admin/users is redirected to dashboard', async () => {
+  it('non-admin navigating to /dashboard/admin/users gets an unauthorized state', async () => {
     server.use(http.get('/api/admin/users', () => HttpResponse.json({ users: sampleUsers })))
     renderUsersPage(regularSession)
     await waitFor(() => {
-      expect(screen.getByText('Dashboard')).toBeDefined()
-      expect(screen.queryByText('alice')).toBeNull()
+      expect(screen.getByText(/don't have access to this page/i)).toBeDefined()
     })
+    expect(screen.queryByText('alice')).toBeNull()
   })
 })
 

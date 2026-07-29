@@ -186,6 +186,340 @@ namespace NajaEcho.Infrastructure.Persistence.Migrations
                     b.ToTable("AspNetUserTokens", "public");
                 });
 
+            modelBuilder.Entity("NajaEcho.Domain.Blueprints.CraftingBlueprint", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool?>("CigDataError")
+                        .HasColumnType("boolean")
+                        .HasColumnName("cig_data_error");
+
+                    b.Property<string>("Gear")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("gear");
+
+                    b.Property<DateTimeOffset>("ImportedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("imported_at");
+
+                    b.Property<bool?>("IsDefault")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_default");
+
+                    b.Property<string>("Manufacturer")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("manufacturer");
+
+                    b.Property<Guid>("ProductEntityClass")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_entity_class");
+
+                    b.Property<string>("ProductName")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("product_name");
+
+                    b.Property<string>("Subtype")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("subtype");
+
+                    b.Property<string>("SuggestedName")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("suggested_name");
+
+                    b.Property<Guid?>("SuggestedProductEntityClass")
+                        .HasColumnType("uuid")
+                        .HasColumnName("suggested_product_entity_class");
+
+                    b.Property<string>("Tag")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("tag");
+
+                    b.Property<JsonDocument>("Tiers")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("tiers");
+
+                    b.Property<string>("Type")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("type");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_blueprints");
+
+                    b.HasIndex("ProductName")
+                        .HasDatabaseName("ix_blueprints_product_name");
+
+                    b.ToTable("blueprints", "sc");
+                });
+
+            modelBuilder.Entity("NajaEcho.Domain.Blueprints.CraftingBlueprintSlotOption", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("kind");
+
+                    b.Property<int?>("MatchedUexId")
+                        .HasColumnType("integer")
+                        .HasColumnName("matched_uex_id");
+
+                    b.Property<string>("MaterialName")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("material_name");
+
+                    b.Property<int>("MinQuality")
+                        .HasColumnType("integer")
+                        .HasColumnName("min_quality");
+
+                    b.Property<int>("OptionIndex")
+                        .HasColumnType("integer")
+                        .HasColumnName("option_index");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric")
+                        .HasColumnName("quantity");
+
+                    b.Property<int>("SlotIndex")
+                        .HasColumnType("integer")
+                        .HasColumnName("slot_index");
+
+                    b.Property<string>("SlotName")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("slot_name");
+
+                    b.Property<Guid>("TierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tier_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_blueprint_slot_options");
+
+                    b.HasIndex("MatchedUexId")
+                        .HasDatabaseName("ix_blueprint_slot_options_matched_uex_id");
+
+                    b.HasIndex("MaterialName")
+                        .HasDatabaseName("ix_blueprint_slot_options_material_name");
+
+                    b.HasIndex("TierId")
+                        .HasDatabaseName("ix_blueprint_slot_options_tier_id");
+
+                    b.HasIndex("TierId", "SlotIndex", "OptionIndex")
+                        .IsUnique()
+                        .HasDatabaseName("ux_blueprint_slot_options_tier_slot_option");
+
+                    b.ToTable("blueprint_slot_options", "sc");
+                });
+
+            modelBuilder.Entity("NajaEcho.Domain.Blueprints.CraftingBlueprintTier", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BlueprintId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("blueprint_id");
+
+                    b.Property<int>("CraftTimeSeconds")
+                        .HasColumnType("integer")
+                        .HasColumnName("craft_time_seconds");
+
+                    b.Property<int>("TierIndex")
+                        .HasColumnType("integer")
+                        .HasColumnName("tier_index");
+
+                    b.HasKey("Id")
+                        .HasName("pk_blueprint_tiers");
+
+                    b.HasIndex("BlueprintId")
+                        .HasDatabaseName("ix_blueprint_tiers_blueprint_id_tier0")
+                        .HasFilter("tier_index = 0");
+
+                    b.HasIndex("BlueprintId", "TierIndex")
+                        .IsUnique()
+                        .HasDatabaseName("ux_blueprint_tiers_blueprint_id_tier_index");
+
+                    b.ToTable("blueprint_tiers", "sc");
+                });
+
+            modelBuilder.Entity("NajaEcho.Domain.Blueprints.CraftingDataset", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<JsonDocument>("BlacklistedEntityClasses")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("blacklisted_entity_classes");
+
+                    b.Property<JsonDocument>("BlacklistedResources")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("blacklisted_resources");
+
+                    b.Property<int>("DismantleTimeSeconds")
+                        .HasColumnType("integer")
+                        .HasColumnName("dismantle_time_seconds");
+
+                    b.Property<double>("Efficiency")
+                        .HasColumnType("double precision")
+                        .HasColumnName("efficiency");
+
+                    b.Property<DateTimeOffset>("ImportedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("imported_at");
+
+                    b.Property<int>("TotalBlueprints")
+                        .HasColumnType("integer")
+                        .HasColumnName("total_blueprints");
+
+                    b.Property<int>("TotalItems")
+                        .HasColumnType("integer")
+                        .HasColumnName("total_items");
+
+                    b.Property<int>("TotalProducts")
+                        .HasColumnType("integer")
+                        .HasColumnName("total_products");
+
+                    b.Property<int>("TotalResources")
+                        .HasColumnType("integer")
+                        .HasColumnName("total_resources");
+
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_crafting_datasets");
+
+                    b.ToTable("crafting_datasets", "sc");
+                });
+
+            modelBuilder.Entity("NajaEcho.Domain.Blueprints.CraftingMaterial", b =>
+                {
+                    b.Property<string>("Kind")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("name");
+
+                    b.Property<int?>("MatchedUexId")
+                        .HasColumnType("integer")
+                        .HasColumnName("matched_uex_id");
+
+                    b.HasKey("Kind", "Name")
+                        .HasName("pk_crafting_materials");
+
+                    b.HasIndex("MatchedUexId")
+                        .HasDatabaseName("ix_crafting_materials_matched_uex_id");
+
+                    b.ToTable("crafting_materials", "sc");
+                });
+
+            modelBuilder.Entity("NajaEcho.Domain.Blueprints.CraftingProperty", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("property_key");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("category");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("name");
+
+                    b.Property<JsonDocument>("NameOverrides")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("name_overrides");
+
+                    b.Property<string>("Unit")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("unit");
+
+                    b.HasKey("Key")
+                        .HasName("pk_crafting_properties");
+
+                    b.ToTable("crafting_properties", "sc");
+                });
+
+            modelBuilder.Entity("NajaEcho.Domain.Blueprints.UserBlueprint", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("AddedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("added_at");
+
+                    b.Property<Guid>("BlueprintId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("blueprint_id");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_user_blueprints");
+
+                    b.HasIndex("BlueprintId")
+                        .HasDatabaseName("ix_user_blueprints_blueprint_id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_user_blueprints_user_id");
+
+                    b.HasIndex("UserId", "BlueprintId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_user_blueprints_user_blueprint");
+
+                    b.ToTable("user_blueprints", "public");
+                });
+
             modelBuilder.Entity("NajaEcho.Domain.Characters.Character", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1088,6 +1422,72 @@ namespace NajaEcho.Infrastructure.Persistence.Migrations
                     b.ToView("loot_member_standing", "public");
                 });
 
+            modelBuilder.Entity("NajaEcho.Domain.Organizations.Organization", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id")
+                        .HasName("pk_organizations");
+
+                    b.ToTable("organizations", "public");
+                });
+
+            modelBuilder.Entity("NajaEcho.Domain.Organizations.OrganizationMembership", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("IsCurrent")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_current");
+
+                    b.Property<DateTimeOffset>("JoinedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("joined_at");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_organization_memberships");
+
+                    b.HasIndex("OrganizationId")
+                        .HasDatabaseName("ix_organization_memberships_organization_id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_organization_memberships_user_current")
+                        .HasFilter("is_current");
+
+                    b.HasIndex("UserId", "OrganizationId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_organization_memberships_user_org");
+
+                    b.ToTable("organization_memberships", "public");
+                });
+
             modelBuilder.Entity("NajaEcho.Domain.Ships.Ship", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1552,6 +1952,36 @@ namespace NajaEcho.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_asp_net_user_tokens_asp_net_users_user_id");
                 });
 
+            modelBuilder.Entity("NajaEcho.Domain.Blueprints.CraftingBlueprintSlotOption", b =>
+                {
+                    b.HasOne("NajaEcho.Domain.Blueprints.CraftingBlueprintTier", null)
+                        .WithMany()
+                        .HasForeignKey("TierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_blueprint_slot_options_tier_id");
+                });
+
+            modelBuilder.Entity("NajaEcho.Domain.Blueprints.CraftingBlueprintTier", b =>
+                {
+                    b.HasOne("NajaEcho.Domain.Blueprints.CraftingBlueprint", null)
+                        .WithMany()
+                        .HasForeignKey("BlueprintId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_blueprint_tiers_blueprint_id");
+                });
+
+            modelBuilder.Entity("NajaEcho.Domain.Blueprints.UserBlueprint", b =>
+                {
+                    b.HasOne("NajaEcho.Domain.Blueprints.CraftingBlueprint", null)
+                        .WithMany()
+                        .HasForeignKey("BlueprintId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_blueprints_blueprint_id");
+                });
+
             modelBuilder.Entity("NajaEcho.Domain.Characters.Character", b =>
                 {
                     b.HasOne("NajaEcho.Infrastructure.Identity.ApplicationUser", null)
@@ -1621,6 +2051,23 @@ namespace NajaEcho.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_loot_ledger_member_id");
+                });
+
+            modelBuilder.Entity("NajaEcho.Domain.Organizations.OrganizationMembership", b =>
+                {
+                    b.HasOne("NajaEcho.Domain.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_organization_memberships_organization_id");
+
+                    b.HasOne("NajaEcho.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_organization_memberships_user_id");
                 });
 
             modelBuilder.Entity("NajaEcho.Domain.Warehouse.ItemAttribute", b =>

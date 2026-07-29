@@ -2,38 +2,27 @@ using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using NajaEcho.Domain.Commodities;
+using NajaEcho.Domain.Items;
 using NajaEcho.Infrastructure.Commodities;
 using NajaEcho.Infrastructure.Persistence;
-using Testcontainers.PostgreSql;
 
 namespace NajaEcho.Infrastructure.Tests.Commodities;
 
+[Collection(PostgresCollection.Name)]
 public sealed class CommodityRepositoryTests : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _pg = new PostgreSqlBuilder()
-        .WithDatabase("najaecho_test")
-        .WithUsername("test")
-        .WithPassword("test")
-        .Build();
-
+    private readonly PostgresFixture _fixture;
     private AppDbContext _db = null!;
+
+    public CommodityRepositoryTests(PostgresFixture fixture) => _fixture = fixture;
 
     public async Task InitializeAsync()
     {
-        await _pg.StartAsync();
-        var opts = new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql(_pg.GetConnectionString())
-            .UseSnakeCaseNamingConvention()
-            .Options;
-        _db = new AppDbContext(opts);
-        await _db.Database.MigrateAsync();
+        await _fixture.ResetAsync();
+        _db = _fixture.CreateContext();
     }
 
-    public async Task DisposeAsync()
-    {
-        await _db.DisposeAsync();
-        await _pg.DisposeAsync();
-    }
+    public async Task DisposeAsync() => await _db.DisposeAsync();
 
     private static JsonDocument MakeRaw(int id, string name) =>
         JsonDocument.Parse($$"""{"id":{{id}},"name":"{{name}}"}""");
@@ -51,6 +40,106 @@ public sealed class CommodityRepositoryTests : IAsyncLifetime
             ImportedAt = now,
             UpdatedAt = now,
         };
+    }
+
+    private async Task SeedItemAsync(int uexId, string uuid, string? slug, DateTimeOffset? softDeletedAt = null)
+    {
+        var now = DateTimeOffset.UtcNow;
+        _db.Items.Add(new Item
+        {
+            Id = Guid.NewGuid(),
+            UexId = uexId,
+            Uuid = uuid,
+            Slug = slug,
+            Name = $"Item {uexId}",
+            RawData = JsonDocument.Parse("{}"),
+            ImportedAt = now,
+            UpdatedAt = now,
+            SoftDeletedAt = softDeletedAt,
+        });
+        await _db.SaveChangesAsync();
+        _db.ChangeTracker.Clear();
+    }
+
+    [Fact]
+    public async Task BulkUpsertAsync_LinkedItemExists_ResolvesUuidAndSlug()
+    {
+        await SeedItemAsync(5848, "agri-uuid", "agricium");
+        var repo = new CommodityRepository(_db);
+
+        var commodity = MakeCommodity(1, "Agricium");
+        commodity.IdItem = 5848;
+        commodity.Uuid = null;
+        commodity.Slug = null;
+
+        await repo.BulkUpsertAsync([commodity]);
+        _db.ChangeTracker.Clear();
+
+        var stored = await _db.Commodities.FirstAsync(c => c.UexId == 1);
+        stored.Uuid.Should().Be("agri-uuid");
+        stored.Slug.Should().Be("agricium");
+    }
+
+    [Fact]
+    public async Task BulkUpsertAsync_NoLinkedItem_LeavesUuidAndSlugNull()
+    {
+        var repo = new CommodityRepository(_db);
+
+        var commodity = MakeCommodity(1, "Agricium");
+        commodity.IdItem = 9999; // no matching item
+
+        await repo.BulkUpsertAsync([commodity]);
+        _db.ChangeTracker.Clear();
+
+        var stored = await _db.Commodities.FirstAsync(c => c.UexId == 1);
+        stored.Uuid.Should().BeNull();
+        stored.Slug.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task BulkUpsertAsync_LinkedItemSoftDeleted_LeavesUuidAndSlugNull()
+    {
+        await SeedItemAsync(5848, "agri-uuid", "agricium", softDeletedAt: DateTimeOffset.UtcNow);
+        var repo = new CommodityRepository(_db);
+
+        var commodity = MakeCommodity(1, "Agricium");
+        commodity.IdItem = 5848;
+
+        await repo.BulkUpsertAsync([commodity]);
+        _db.ChangeTracker.Clear();
+
+        var stored = await _db.Commodities.FirstAsync(c => c.UexId == 1);
+        stored.Uuid.Should().BeNull();
+        stored.Slug.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task BulkUpsertAsync_LinkedItemAppearsOnReimport_ResolvesAndCountsUpdated()
+    {
+        var repo = new CommodityRepository(_db);
+
+        var commodity = MakeCommodity(1, "Agricium");
+        commodity.IdItem = 5848;
+
+        // First import: item not yet present → unresolved.
+        await repo.BulkUpsertAsync([commodity]);
+        _db.ChangeTracker.Clear();
+        (await _db.Commodities.FirstAsync(c => c.UexId == 1)).Uuid.Should().BeNull();
+
+        // Item now imported.
+        await SeedItemAsync(5848, "agri-uuid", "agricium");
+
+        var reimport = MakeCommodity(1, "Agricium");
+        reimport.IdItem = 5848;
+        var (_, upd, unch, _, _) = await repo.BulkUpsertAsync([reimport]);
+
+        upd.Should().Be(1);
+        unch.Should().Be(0);
+        _db.ChangeTracker.Clear();
+
+        var stored = await _db.Commodities.FirstAsync(c => c.UexId == 1);
+        stored.Uuid.Should().Be("agri-uuid");
+        stored.Slug.Should().Be("agricium");
     }
 
     [Fact]

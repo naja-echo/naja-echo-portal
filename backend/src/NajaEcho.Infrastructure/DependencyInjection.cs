@@ -4,6 +4,15 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NajaEcho.Application.Abstractions;
 using NajaEcho.Application.Features.Auth.GetCurrentUser;
+using NajaEcho.Application.Features.Blueprints.AddMyBlueprint;
+using NajaEcho.Application.Features.Blueprints.GetBlueprintDetail;
+using NajaEcho.Application.Features.Blueprints.GetBlueprints;
+using NajaEcho.Application.Features.Blueprints.GetMyBlueprints;
+using NajaEcho.Application.Features.Blueprints.GetOrgBlueprintDetail;
+using NajaEcho.Application.Features.Blueprints.GetOrgBlueprints;
+using NajaEcho.Application.Features.Blueprints.ImportBlueprints;
+using NajaEcho.Application.Features.Blueprints.RemoveMyBlueprint;
+using NajaEcho.Application.Features.Blueprints.SearchBlueprints;
 using NajaEcho.Application.Features.Auth.SignInWithDiscord;
 using NajaEcho.Application.Features.Hangar.AddShipToHangar;
 using NajaEcho.Application.Features.Hangar.GetMyHangar;
@@ -36,6 +45,8 @@ using NajaEcho.Application.Features.Warehouse.UpdateInventoryItem;
 using NajaEcho.Application.Features.Warehouse.ShipComponents.GetShipComponentFilters;
 using NajaEcho.Application.Features.Warehouse.ShipComponents.GetShipComponents;
 using NajaEcho.Application.Features.Warehouse.ShipComponents.SearchSystemsCatalog;
+using NajaEcho.Application.Features.Admin.Organizations.AssignOrganization;
+using NajaEcho.Application.Features.Admin.Organizations.GetOrganizations;
 using NajaEcho.Application.Features.Admin.Users.AddCharacterForUser;
 using NajaEcho.Application.Features.Admin.Users.AssignRoles;
 using NajaEcho.Application.Features.Admin.Users.GetUsers;
@@ -52,9 +63,11 @@ using NajaEcho.Application.Features.Warehouse.GetLocations;
 using NajaEcho.Application.Features.Warehouse.TransferInventoryItem;
 using NajaEcho.Application.Features.Warehouse.Materials.TransferMaterial;
 using NajaEcho.Application.Features.Warehouse.Materials.UpdateMaterial;
+using NajaEcho.Infrastructure.Blueprints;
 using NajaEcho.Infrastructure.Characters;
 using NajaEcho.Infrastructure.Commodities;
 using NajaEcho.Infrastructure.Hangar;
+using NajaEcho.Infrastructure.Organizations;
 using NajaEcho.Infrastructure.Loot;
 using NajaEcho.Infrastructure.Loot;
 using NajaEcho.Infrastructure.Identity;
@@ -155,6 +168,11 @@ public static class DependencyInjection
         services.AddScoped<AddCharacterForUserHandler>();
         services.AddScoped<AssignRolesHandler>();
 
+        // Organizations
+        services.AddScoped<IOrganizationRepository, OrganizationRepository>();
+        services.AddScoped<GetOrganizationsHandler>();
+        services.AddScoped<AssignOrganizationHandler>();
+
         // Warehouse
         services.AddScoped<IWarehouseInventoryRepository, WarehouseInventoryRepository>();
         services.AddScoped<GetInventoryHandler>();
@@ -202,8 +220,11 @@ public static class DependencyInjection
         services.AddScoped<VerifyCharacterHandler>();
         services.AddScoped<GetCharactersHandler>();
 
-        // Role seeder (Admin + Quartermaster + CrewResourceOfficer)
+        // Role seeder — seeds every role in Domain.Users.Roles.All
         services.AddScoped<RoleSeeder>();
+
+        // Singleton so the invalidation flag is visible to every request in the process.
+        services.AddSingleton<IUserSessionInvalidator, InMemoryUserSessionInvalidator>();
 
         // Loot Ledger
         services.AddScoped<ILootLedgerRepository, LootLedgerRepository>();
@@ -211,6 +232,24 @@ public static class DependencyInjection
         services.AddScoped<GetDistributionHandler>();
         services.AddScoped<AddOrgPointsHandler>();
         services.AddScoped<AddLootPointsHandler>();
+
+        // Crafting Blueprints
+        services.AddScoped<IBlueprintRepository, BlueprintRepository>();
+        services.AddScoped<ImportBlueprintsHandler>();
+        services.AddScoped<GetBlueprintsHandler>();
+        services.AddScoped<SearchBlueprintsHandler>();
+
+        // User Blueprints
+        services.AddScoped<IUserBlueprintRepository, UserBlueprintRepository>();
+        services.AddScoped<GetMyBlueprintsHandler>();
+        services.AddScoped<AddMyBlueprintHandler>();
+        services.AddScoped<GetBlueprintDetailHandler>();
+        services.AddScoped<RemoveMyBlueprintHandler>();
+
+        // Org Blueprints
+        services.AddScoped<IOrgBlueprintRepository, OrgBlueprintRepository>();
+        services.AddScoped<GetOrgBlueprintsHandler>();
+        services.AddScoped<GetOrgBlueprintDetailHandler>();
 
         return services;
     }

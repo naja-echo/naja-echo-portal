@@ -5,7 +5,8 @@ import { MemberLedgerSheet } from '../components/MemberLedgerSheet'
 import { ClaimPriorityBadge } from '../components/ClaimPriorityBadge'
 import { AddPointsDialog } from '../components/AddPointsDialog'
 import { AwardLootDialog } from '../components/AwardLootDialog'
-import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser'
+import { useHasRole } from '@/features/auth/hooks/useHasRole'
+import { ROLES } from '@/features/auth/lib/roles'
 import {
   Table,
   TableBody,
@@ -19,14 +20,12 @@ import type { DistributionRow } from '../schemas/lootSchemas'
 
 export function LootDistributionPage() {
   const { data, isLoading, isError } = useDistribution()
-  const { data: session } = useCurrentUser()
   const [selectedMember, setSelectedMember] = useState<DistributionRow | null>(null)
   const [showAddPoints, setShowAddPoints] = useState(false)
   const [showAwardLoot, setShowAwardLoot] = useState(false)
 
-  const roles = session?.authenticated ? session.user.roles : []
-  const isCroOrAdmin = roles.includes('CrewResourceOfficer') || roles.includes('Admin')
-  const isQmOrAdmin = roles.includes('Quartermaster') || roles.includes('Admin')
+  const isCroOrAdmin = useHasRole([ROLES.CrewResourceOfficer])
+  const isQmOrAdmin = useHasRole([ROLES.Quartermaster])
 
   if (isLoading) return <div className="p-6">Loading...</div>
   if (isError || !data) return <div className="p-6 text-destructive">Failed to load distribution data.</div>

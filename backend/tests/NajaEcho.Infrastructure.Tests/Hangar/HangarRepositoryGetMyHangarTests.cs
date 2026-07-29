@@ -5,37 +5,25 @@ using NajaEcho.Domain.Hangar;
 using NajaEcho.Domain.Ships;
 using NajaEcho.Infrastructure.Hangar;
 using NajaEcho.Infrastructure.Persistence;
-using Testcontainers.PostgreSql;
 using Xunit;
 
 namespace NajaEcho.Infrastructure.Tests.Hangar;
 
+[Collection(PostgresCollection.Name)]
 public sealed class HangarRepositoryGetMyHangarTests : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _pg = new PostgreSqlBuilder()
-        .WithDatabase("najaecho_test")
-        .WithUsername("test")
-        .WithPassword("test")
-        .Build();
-
+    private readonly PostgresFixture _fixture;
     private AppDbContext _db = null!;
+
+    public HangarRepositoryGetMyHangarTests(PostgresFixture fixture) => _fixture = fixture;
 
     public async Task InitializeAsync()
     {
-        await _pg.StartAsync();
-        var opts = new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql(_pg.GetConnectionString())
-            .UseSnakeCaseNamingConvention()
-            .Options;
-        _db = new AppDbContext(opts);
-        await _db.Database.MigrateAsync();
+        await _fixture.ResetAsync();
+        _db = _fixture.CreateContext();
     }
 
-    public async Task DisposeAsync()
-    {
-        await _db.DisposeAsync();
-        await _pg.DisposeAsync();
-    }
+    public async Task DisposeAsync() => await _db.DisposeAsync();
 
     private static readonly Guid UserId1 = Guid.NewGuid();
     private static readonly Guid UserId2 = Guid.NewGuid();

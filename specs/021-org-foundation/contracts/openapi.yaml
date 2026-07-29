@@ -1,0 +1,283 @@
+openapi: 3.1.0
+
+info:
+  title: NajaEchoPortal — Organization Foundation API
+  version: 1.0.0
+  description: >
+    Admin endpoints for the organization tenant boundary (spec 021-org-foundation, issue #31).
+
+    Covers listing assignable organizations (FR-015), setting or clearing a member's current
+    organization (FR-012), and the organization field added to the existing admin user list
+    (FR-011). Every operation requires the Admin policy (FR-013).
+
+    This contract also documents `PUT /api/admin/users/{userId}/roles`, which ships today but
+    was never added to any contract — recorded here to close that drift rather than leave it.
+
+servers:
+  - url: /
+
+paths:
+  /api/admin/organizations:
+    get:
+      operationId: getAdminOrganizations
+      summary: List assignable organizations
+      description: >
+        Returns every organization a member may be assigned to. This release produces only the
+        default "Naja Echo" organization and offers no way to create, rename, or delete one
+        (FR-015), so the list is expected to contain exactly one entry.
+      tags: [AdminOrganizations]
+      responses:
+        '200':
+          description: The organizations available for assignment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/admin/users/{userId}/organization:
+    put:
+      operationId: assignOrganizationForUser
+      summary: Set or clear a member's current organization
+      description: >
+        Sets the member's current organization, or clears it when `organizationId` is null
+        (FR-012). Idempotent: assigning a member to the organization they are already in leaves
+        state unchanged.
+
+        Any previously current membership is cleared in the same transaction, so a member never
+        holds two current memberships (FR-004). Records the member already owns stay with the
+        organization they were created in and are not transferred (FR-016); the presence of such
+        records never blocks the change (FR-017).
+
+        Takes effect on the member's next request without a sign-out (FR-014). Emits a structured
+        log event identifying the acting admin, the affected member, and both organizations
+        (FR-018).
+
+        Error `type` values: `urn:najaecho:error:user-not-found`,
+        `urn:najaecho:error:organization-not-found`.
+      tags: [AdminUsers]
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignOrganizationRequest'
+      responses:
+        '204':
+          description: The assignment was saved.
+        '400':
+          description: The request body was malformed.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: >
+            The member does not exist (`urn:najaecho:error:user-not-found`), or the requested
+            organization does not exist (`urn:najaecho:error:organization-not-found`).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /api/admin/users:
+    get:
+      operationId: getAdminUsers
+      summary: List members with their roles, characters, and organization
+      description: >
+        Existing endpoint (spec 017), extended by this feature. Each member now carries an
+        `organization` field holding their current organization, or null when they have no
+        current membership (FR-011).
+
+        This listing is not itself organization-scoped — an admin sees every registered member
+        regardless of organization, because member administration is not organization-scoped
+        data (FR-025).
+      tags: [AdminUsers]
+      responses:
+        '200':
+          description: All registered members.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/admin/users/{userId}/roles:
+    put:
+      operationId: assignRolesForUser
+      summary: Replace a member's roles
+      description: >
+        Pre-existing endpoint, documented here to close a contract gap — it shipped without any
+        contract entry. Replaces the member's role set entirely; roles absent from the request
+        are removed.
+
+        Error `type` value: `urn:najaecho:error:user-not-found`. An unknown role name returns
+        400 with the offending role in the detail.
+      tags: [AdminUsers]
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignRolesRequest'
+      responses:
+        '204':
+          description: The roles were saved.
+        '400':
+          description: One or more role names are not recognised.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: The member does not exist.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+components:
+
+  parameters:
+    UserId:
+      name: userId
+      in: path
+      required: true
+      description: The member's identifier.
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Unauthorized:
+      description: The request is not authenticated.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    Forbidden:
+      description: The caller is authenticated but is not a global admin.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+  schemas:
+
+    OrganizationSummary:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 100
+
+    OrganizationListResponse:
+      type: object
+      required: [organizations]
+      properties:
+        organizations:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationSummary'
+
+    AssignOrganizationRequest:
+      type: object
+      required: [organizationId]
+      properties:
+        organizationId:
+          type: [string, 'null']
+          format: uuid
+          description: >
+            The organization to make current for this member. Null clears the member's current
+            organization, leaving them with no current membership — a valid state (FR-005).
+
+    AssignRolesRequest:
+      type: object
+      required: [roles]
+      properties:
+        roles:
+          type: array
+          description: The complete set of roles the member should hold after this call.
+          items:
+            type: string
+            enum: [Admin, Quartermaster, CrewResourceOfficer]
+
+    AdminUserCharacterResponse:
+      type: object
+      required: [id, name, handle]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        handle:
+          type: string
+
+    AdminUserResponse:
+      type: object
+      required: [id, authName, roles, characters, organization]
+      properties:
+        id:
+          type: string
+          format: uuid
+        authName:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+        characters:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminUserCharacterResponse'
+        organization:
+          oneOf:
+            - $ref: '#/components/schemas/OrganizationSummary'
+            - type: 'null'
+          description: >
+            The member's current organization, or null when they hold no current membership.
+
+    AdminUserListResponse:
+      type: object
+      required: [users]
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminUserResponse'
+
+    ProblemDetails:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string

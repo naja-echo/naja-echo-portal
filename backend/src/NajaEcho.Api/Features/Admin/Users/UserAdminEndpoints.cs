@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Logging;
 using NajaEcho.Api.Authorization;
+using NajaEcho.Api.Features.Admin.Organizations.Contracts;
 using NajaEcho.Api.Features.Admin.Users.Contracts;
+using NajaEcho.Application.Features.Admin.Organizations.AssignOrganization;
 using NajaEcho.Application.Features.Admin.Users.AddCharacterForUser;
 using NajaEcho.Application.Features.Admin.Users.AssignRoles;
 using NajaEcho.Application.Features.Admin.Users.GetUsers;
@@ -17,6 +19,7 @@ public static class UserAdminEndpoints
         group.MapGet("/", GetUsers);
         group.MapPost("/{userId:guid}/characters", AddCharacterForUser);
         group.MapPut("/{userId:guid}/roles", AssignRoles);
+        group.MapPut("/{userId:guid}/organization", AssignOrganization);
 
         return app;
     }
@@ -39,7 +42,10 @@ public static class UserAdminEndpoints
                 u.Id,
                 u.AuthName,
                 u.Roles,
-                u.Characters.Select(c => new AdminUserCharacterResponse(c.Id, c.Name, c.Handle)).ToList()))
+                u.Characters.Select(c => new AdminUserCharacterResponse(c.Id, c.Name, c.Handle)).ToList(),
+                u.Organization is null
+                    ? null
+                    : new OrganizationSummaryResponse(u.Organization.Id, u.Organization.Name)))
             .ToList());
 
         return Results.Ok(response);
@@ -132,6 +138,56 @@ public static class UserAdminEndpoints
                 detail: "Character name could not be retrieved — the handle may be valid but the RSI page returned no name.",
                 statusCode: StatusCodes.Status422UnprocessableEntity,
                 title: "Character name unavailable.");
+        }
+    }
+
+    private static async Task<IResult> AssignOrganization(
+        Guid userId,
+        AssignOrganizationRequest request,
+        AssignOrganizationHandler handler,
+        ILogger<AssignOrganizationHandler> logger,
+        HttpContext httpContext,
+        CancellationToken ct)
+    {
+        var callerIdValue = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var callerId = Guid.TryParse(callerIdValue, out var parsed) ? parsed : (Guid?)null;
+
+        try
+        {
+            await handler.HandleAsync(
+                new AssignOrganizationCommand(userId, request.OrganizationId, callerId), ct);
+
+            // The handler emits the FR-018 audit event; this is the endpoint-level outcome line
+            // that every other endpoint in this group also writes.
+            logger.LogInformation(
+                "AssignOrganization caller={CallerId} targetUserId={TargetUserId} organizationId={OrganizationId} outcome=success",
+                callerIdValue, userId, request.OrganizationId);
+
+            return Results.NoContent();
+        }
+        catch (UserNotFoundException)
+        {
+            logger.LogInformation(
+                "AssignOrganization caller={CallerId} targetUserId={TargetUserId} outcome=user-not-found",
+                callerIdValue, userId);
+
+            return Results.Problem(
+                detail: $"User '{userId}' was not found.",
+                statusCode: StatusCodes.Status404NotFound,
+                title: "User not found.",
+                type: "urn:najaecho:error:user-not-found");
+        }
+        catch (OrganizationNotFoundException ex)
+        {
+            logger.LogInformation(
+                "AssignOrganization caller={CallerId} targetUserId={TargetUserId} organizationId={OrganizationId} outcome=organization-not-found",
+                callerIdValue, userId, ex.OrganizationId);
+
+            return Results.Problem(
+                detail: $"Organization '{ex.OrganizationId}' was not found.",
+                statusCode: StatusCodes.Status404NotFound,
+                title: "Organization not found.",
+                type: "urn:najaecho:error:organization-not-found");
         }
     }
 

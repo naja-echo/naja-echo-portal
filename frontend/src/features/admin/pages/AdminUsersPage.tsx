@@ -4,12 +4,14 @@ import { UsersFilter } from '../components/UsersFilter'
 import { UsersTable } from '../components/UsersTable'
 import { AddCharacterDialog } from '../components/AddCharacterDialog'
 import { AssignRolesDialog } from '../components/AssignRolesDialog'
+import { AssignOrganizationDialog } from '../components/AssignOrganizationDialog'
 import { getRoleDisplayName } from '../lib/roleDisplayNames'
 import type { AdminUser } from '../schemas/userSchemas'
 
 function matchesFilter(user: AdminUser, filter: string): boolean {
   const q = filter.toLowerCase()
   if (user.authName.toLowerCase().includes(q)) return true
+  if (user.organization?.name.toLowerCase().includes(q)) return true
   if (user.roles.some((r) => getRoleDisplayName(r).toLowerCase().includes(q))) return true
   if (user.characters.some((c) =>
     c.name.toLowerCase().includes(q) || c.handle.toLowerCase().includes(q))) return true
@@ -21,6 +23,8 @@ export function AdminUsersPage() {
   const [filter, setFilter] = useState('')
   const [dialogUserId, setDialogUserId] = useState<string | null>(null)
   const [assignRolesTarget, setAssignRolesTarget] = useState<{ userId: string; roles: string[] } | null>(null)
+  const [assignOrganizationTarget, setAssignOrganizationTarget] =
+    useState<{ userId: string; organizationId: string | null } | null>(null)
 
   const users = data?.users ?? []
   const filtered = filter ? users.filter((u) => matchesFilter(u, filter)) : users
@@ -55,6 +59,8 @@ export function AdminUsersPage() {
                 users={filtered}
                 onAddCharacter={(userId) => setDialogUserId(userId)}
                 onAssignRoles={(userId, roles) => setAssignRolesTarget({ userId, roles })}
+                onAssignOrganization={(userId, organizationId) =>
+                  setAssignOrganizationTarget({ userId, organizationId })}
               />
             )
       )}
@@ -73,6 +79,15 @@ export function AdminUsersPage() {
           userId={assignRolesTarget.userId}
           currentRoles={assignRolesTarget.roles}
           onClose={() => setAssignRolesTarget(null)}
+        />
+      )}
+
+      {assignOrganizationTarget && (
+        <AssignOrganizationDialog
+          open
+          userId={assignOrganizationTarget.userId}
+          currentOrganizationId={assignOrganizationTarget.organizationId}
+          onClose={() => setAssignOrganizationTarget(null)}
         />
       )}
     </div>

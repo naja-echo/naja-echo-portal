@@ -1,0 +1,123 @@
+openapi: 3.1.0
+info:
+  title: NajaEcho Portal API – Blueprint Detail Panel additions
+  version: 1.0.0
+  description: >
+    Two new endpoints added to the existing /api/blueprints group.
+    All endpoints require an authenticated session cookie.
+
+paths:
+  /api/blueprints/mine/{blueprintId}:
+    get:
+      summary: Get detail for a blueprint in the user's personal list
+      operationId: getMyBlueprintDetail
+      tags: [Blueprints]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: blueprintId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Blueprint detail with ingredient list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlueprintDetailResponse'
+        '401':
+          description: Not authenticated
+        '404':
+          description: Blueprint not found in the user's personal list
+
+    delete:
+      summary: Remove a blueprint from the user's personal list
+      operationId: removeMyBlueprint
+      tags: [Blueprints]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: blueprintId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Blueprint removed successfully
+        '401':
+          description: Not authenticated
+        '404':
+          description: Blueprint not found in the user's personal list
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: __Host-session
+
+  schemas:
+    BlueprintDetailResponse:
+      type: object
+      required: [blueprintId, ingredientCount, slots]
+      properties:
+        blueprintId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+          nullable: true
+          description: Display name of the blueprint; null if not yet named in catalog
+        type:
+          type: string
+          nullable: true
+          description: Blueprint category (e.g., "Weapon", "Component")
+        craftTimeSeconds:
+          type: integer
+          nullable: true
+          description: Craft time for the base tier in seconds; null if no base tier exists
+        ingredientCount:
+          type: integer
+          description: Number of distinct ingredient slots at the base crafting tier
+        slots:
+          type: array
+          description: Ingredient slots ordered by slot_index
+          items:
+            $ref: '#/components/schemas/BlueprintSlotResponse'
+
+    BlueprintSlotResponse:
+      type: object
+      required: [slotIndex, slotName, options]
+      properties:
+        slotIndex:
+          type: integer
+        slotName:
+          type: string
+          description: Display label for the ingredient slot (e.g., "Cast Iron")
+        options:
+          type: array
+          description: Material options for this slot, ordered by option_index
+          items:
+            $ref: '#/components/schemas/BlueprintSlotOptionResponse'
+
+    BlueprintSlotOptionResponse:
+      type: object
+      required: [optionIndex, materialName, kind, quantity]
+      properties:
+        optionIndex:
+          type: integer
+        materialName:
+          type: string
+          description: Name of the raw material (e.g., "Injector Nozzles")
+        kind:
+          type: string
+          description: Material kind discriminator (e.g., "material", "component")
+        quantity:
+          type: number
+          format: double
+          description: Quantity of this material required

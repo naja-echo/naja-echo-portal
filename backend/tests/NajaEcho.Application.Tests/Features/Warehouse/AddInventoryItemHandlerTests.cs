@@ -12,6 +12,7 @@ using NajaEcho.Application.Features.Warehouse.ShipComponents.SearchSystemsCatalo
 using NajaEcho.Domain.Items;
 using NajaEcho.Domain.Warehouse;
 using Xunit;
+using NajaEcho.Domain.Organizations;
 
 namespace NajaEcho.Application.Tests.Features.Warehouse;
 
@@ -75,6 +76,10 @@ public sealed class AddInventoryItemHandlerTests
         public Task<IReadOnlyList<NajaEcho.Application.Features.Admin.Users.GetUsers.AdminUserDto>> GetUsersWithRolesAndCharactersAsync(CancellationToken ct) =>
             Task.FromResult<IReadOnlyList<NajaEcho.Application.Features.Admin.Users.GetUsers.AdminUserDto>>([]);
         public Task SetRolesAsync(Guid userId, IReadOnlyList<string> roles, CancellationToken ct) => Task.CompletedTask;
+
+
+        public Task<IReadOnlyList<string>> GetRolesAsync(Guid userId, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<string>>([]);
     }
 
     private sealed class FakeScRepo : IShipComponentRepository
