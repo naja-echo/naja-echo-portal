@@ -70,7 +70,7 @@ public static class BlueprintEndpoints
         Log.Information("GetMyBlueprints {UserId} returned {Count}", userId, items.Count);
 
         return Results.Ok(new MyBlueprintListResponse(
-            items.Select(i => new MyBlueprintListItemResponse(i.BlueprintId, i.ProductName, i.Type, i.Subtype, i.IngredientCount)).ToList()));
+            items.Select(i => new MyBlueprintListItemResponse(i.BlueprintId, i.ProductName, i.Type, i.Subtype, i.Gear, i.IngredientCount)).ToList()));
     }
 
     private static async Task<IResult> AddMyBlueprint(
@@ -94,7 +94,7 @@ public static class BlueprintEndpoints
 
             return Results.Created(
                 $"/api/blueprints/mine",
-                new MyBlueprintListItemResponse(item.BlueprintId, item.ProductName, item.Type, item.Subtype, item.IngredientCount));
+                new MyBlueprintListItemResponse(item.BlueprintId, item.ProductName, item.Type, item.Subtype, item.Gear, item.IngredientCount));
         }
         catch (BlueprintNotFoundException ex)
         {
@@ -170,7 +170,7 @@ public static class BlueprintEndpoints
         var items = await handler.HandleAsync(new GetOrgBlueprintsQuery(userId), ct);
 
         return Results.Ok(new OrgBlueprintListResponse(
-            items.Select(i => new OrgBlueprintListItemResponse(i.BlueprintId, i.ProductName, i.Type, i.Subtype, i.IngredientCount)).ToList()));
+            items.Select(i => new OrgBlueprintListItemResponse(i.BlueprintId, i.ProductName, i.Type, i.Subtype, i.Gear, i.IngredientCount)).ToList()));
     }
 
     private static async Task<IResult> GetOrgBlueprintDetail(

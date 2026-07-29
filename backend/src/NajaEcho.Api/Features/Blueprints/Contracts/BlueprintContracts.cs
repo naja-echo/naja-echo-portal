@@ -32,6 +32,7 @@ public sealed record MyBlueprintListItemResponse(
     string? ProductName,
     string? Type,
     string? Subtype,
+    string? Gear,
     int IngredientCount);
 
 public sealed record MyBlueprintListResponse(
@@ -44,6 +45,7 @@ public sealed record OrgBlueprintListItemResponse(
     string? ProductName,
     string? Type,
     string? Subtype,
+    string? Gear,
     int IngredientCount);
 
 public sealed record OrgBlueprintListResponse(

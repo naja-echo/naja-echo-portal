@@ -3,6 +3,7 @@ import { useOrgBlueprints } from '../hooks/useOrgBlueprints'
 import { useBlueprintFilters } from '../hooks/useBlueprintFilters'
 import { OrgBlueprintDetailPanel } from '../components/OrgBlueprintDetailPanel'
 import { BlueprintFilters } from '../components/BlueprintFilters'
+import { getBlueprintColumns } from '../config/blueprintColumns'
 
 export function OrgBlueprintsPage() {
   const [selectedBlueprintId, setSelectedBlueprintId] = useState<string | null>(null)
@@ -49,9 +50,9 @@ export function OrgBlueprintsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="px-4 py-3 text-left font-medium">Blueprint</th>
-                <th className="px-4 py-3 text-left font-medium">Type</th>
-                <th className="px-4 py-3 text-left font-medium">Ingredients</th>
+                {getBlueprintColumns(filters.category).map(col => (
+                  <th key={col.header} className="px-4 py-3 text-left font-medium">{col.header}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -61,9 +62,11 @@ export function OrgBlueprintsPage() {
                   className="border-b last:border-0 cursor-pointer hover:bg-muted/50"
                   onClick={() => setSelectedBlueprintId(bp.blueprintId)}
                 >
-                  <td className="px-4 py-3">{bp.productName ?? '—'}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{bp.type ?? '—'}</td>
-                  <td className="px-4 py-3">{bp.ingredientCount}</td>
+                  {getBlueprintColumns(filters.category).map(col => (
+                    <td key={col.header} className={`px-4 py-3${col.className ? ` ${col.className}` : ''}`}>
+                      {col.render(bp)}
+                    </td>
+                  ))}
                 </tr>
               ))}
             </tbody>

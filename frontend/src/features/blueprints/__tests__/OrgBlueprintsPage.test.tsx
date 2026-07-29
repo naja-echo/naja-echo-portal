@@ -37,7 +37,7 @@ describe('OrgBlueprintsPage', () => {
       http.get('/api/blueprints/org', () =>
         HttpResponse.json({
           blueprints: [
-            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', subtype: null, ingredientCount: 3 },
+            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', subtype: null, gear: null, ingredientCount: 3 },
           ],
         }),
       ),
@@ -60,7 +60,7 @@ describe('OrgBlueprintsPage', () => {
       http.get('/api/blueprints/org', () =>
         HttpResponse.json({
           blueprints: [
-            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', subtype: 'Pistol', ingredientCount: 3 },
+            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', subtype: 'Pistol', gear: null, ingredientCount: 3 },
           ],
         }),
       ),
@@ -77,8 +77,8 @@ describe('OrgBlueprintsPage', () => {
       http.get('/api/blueprints/org', () =>
         HttpResponse.json({
           blueprints: [
-            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', subtype: 'Pistol', ingredientCount: 3 },
-            { blueprintId: '22222222-2222-2222-2222-222222222222', productName: 'Hull Panel', type: 'Ship', subtype: null, ingredientCount: 1 },
+            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', subtype: 'Pistol', gear: null, ingredientCount: 3 },
+            { blueprintId: '22222222-2222-2222-2222-222222222222', productName: 'Hull Panel', type: 'Ship', subtype: null, gear: null, ingredientCount: 1 },
           ],
         }),
       ),
@@ -100,7 +100,7 @@ describe('OrgBlueprintsPage', () => {
       http.get('/api/blueprints/org', () =>
         HttpResponse.json({
           blueprints: [
-            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', subtype: 'Pistol', ingredientCount: 3 },
+            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', subtype: 'Pistol', gear: null, ingredientCount: 3 },
           ],
         }),
       ),
@@ -120,7 +120,7 @@ describe('OrgBlueprintsPage', () => {
       http.get('/api/blueprints/org', () =>
         HttpResponse.json({
           blueprints: [
-            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', subtype: null, ingredientCount: 3 },
+            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', subtype: null, gear: null, ingredientCount: 3 },
           ],
         }),
       ),

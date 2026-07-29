@@ -35,6 +35,7 @@ export interface MyBlueprintListItem {
   productName: string | null
   type: string | null
   subtype: string | null
+  gear: string | null
   ingredientCount: number
 }
 
@@ -74,6 +75,7 @@ export interface OrgBlueprintListItem {
   productName: string | null
   type: string | null
   subtype: string | null
+  gear: string | null
   ingredientCount: number
 }
 

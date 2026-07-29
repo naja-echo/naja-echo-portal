@@ -111,7 +111,7 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
     {
         var blueprintId = Guid.NewGuid();
         _factory.Services.GetRequiredService<FakeUserBlueprintTestRepository>()
-            .Seed(UserId, [new MyBlueprintListItemDto(blueprintId, "Widgeteer", "Weapon", null, 4)]);
+            .Seed(UserId, [new MyBlueprintListItemDto(blueprintId, "Widgeteer", "Weapon", null, null, 4)]);
 
         var response = await AuthenticatedClient().GetAsync("/api/blueprints/mine");
 
@@ -128,7 +128,7 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
     {
         var blueprintId = Guid.NewGuid();
         _factory.Services.GetRequiredService<FakeUserBlueprintTestRepository>()
-            .Seed(UserId, [new MyBlueprintListItemDto(blueprintId, "Widget Mk1", "Weapon", "Pistol", 2)]);
+            .Seed(UserId, [new MyBlueprintListItemDto(blueprintId, "Widget Mk1", "Weapon", "Pistol", null, 2)]);
 
         var response = await AuthenticatedClient().GetAsync("/api/blueprints/mine");
 
@@ -186,7 +186,7 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
     {
         var blueprintId = Guid.NewGuid();
         _factory.Services.GetRequiredService<FakeUserBlueprintTestRepository>()
-            .AddResult = new MyBlueprintListItemDto(blueprintId, "Widget", "Weapon", null, 2);
+            .AddResult = new MyBlueprintListItemDto(blueprintId, "Widget", "Weapon", null, null, 2);
 
         var response = await AuthenticatedClient().PostAsync("/api/blueprints/mine",
             Json($$"""{"blueprintId":"{{blueprintId}}"}"""));
@@ -302,7 +302,7 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
     {
         var blueprintId = Guid.NewGuid();
         _factory.Services.GetRequiredService<FakeOrgBlueprintTestRepository>()
-            .ListResult = [new OrgBlueprintListItemDto(blueprintId, "Hull Panel", "Component", null, 2)];
+            .ListResult = [new OrgBlueprintListItemDto(blueprintId, "Hull Panel", "Component", null, null, 2)];
 
         var response = await AuthenticatedClient().GetAsync("/api/blueprints/org");
 
@@ -318,7 +318,7 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
     {
         var blueprintId = Guid.NewGuid();
         _factory.Services.GetRequiredService<FakeOrgBlueprintTestRepository>()
-            .ListResult = [new OrgBlueprintListItemDto(blueprintId, "Hull Panel", "Component", "Armor", 2)];
+            .ListResult = [new OrgBlueprintListItemDto(blueprintId, "Hull Panel", "Component", "Armor", null, 2)];
 
         var response = await AuthenticatedClient().GetAsync("/api/blueprints/org");
 
@@ -371,7 +371,7 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
 
     // ── Response shapes ───────────────────────────────────────────
 
-    private sealed record ItemResponseShape(Guid BlueprintId, string? ProductName, string? Type, string? Subtype, int IngredientCount);
+    private sealed record ItemResponseShape(Guid BlueprintId, string? ProductName, string? Type, string? Subtype, string? Gear, int IngredientCount);
     private sealed record ListResponseShape(List<ItemResponseShape> Blueprints);
     private sealed record SearchItemShape(Guid BlueprintId, string ProductName, string? Type);
     private sealed record SearchResponseShape(List<SearchItemShape> Results);
@@ -379,7 +379,7 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
     private sealed record SlotShape(int SlotIndex, string SlotName, List<SlotOptionShape> Options);
     private sealed record DetailResponseShape(Guid BlueprintId, string? ProductName, string? Type, int? CraftTimeSeconds, int IngredientCount, List<SlotShape> Slots);
     private sealed record OwnerShape(Guid UserId, string DisplayName);
-    private sealed record OrgItemShape(Guid BlueprintId, string? ProductName, string? Type, string? Subtype, int IngredientCount);
+    private sealed record OrgItemShape(Guid BlueprintId, string? ProductName, string? Type, string? Subtype, string? Gear, int IngredientCount);
     private sealed record OrgListResponseShape(List<OrgItemShape> Blueprints);
     private sealed record OrgDetailResponseShape(Guid BlueprintId, string? ProductName, string? Type, int? CraftTimeSeconds, int IngredientCount, List<SlotShape> Slots, List<OwnerShape> Owners);
 }
