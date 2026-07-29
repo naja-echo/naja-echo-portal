@@ -111,7 +111,7 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
     {
         var blueprintId = Guid.NewGuid();
         _factory.Services.GetRequiredService<FakeUserBlueprintTestRepository>()
-            .Seed(UserId, [new MyBlueprintListItemDto(blueprintId, "Widgeteer", "Weapon", 4)]);
+            .Seed(UserId, [new MyBlueprintListItemDto(blueprintId, "Widgeteer", "Weapon", null, 4)]);
 
         var response = await AuthenticatedClient().GetAsync("/api/blueprints/mine");
 
@@ -121,6 +121,21 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
         body.Blueprints[0].BlueprintId.Should().Be(blueprintId);
         body.Blueprints[0].ProductName.Should().Be("Widgeteer");
         body.Blueprints[0].IngredientCount.Should().Be(4);
+    }
+
+    [Fact]
+    public async Task GetMine_ResponseIncludesSubtype()
+    {
+        var blueprintId = Guid.NewGuid();
+        _factory.Services.GetRequiredService<FakeUserBlueprintTestRepository>()
+            .Seed(UserId, [new MyBlueprintListItemDto(blueprintId, "Widget Mk1", "Weapon", "Pistol", 2)]);
+
+        var response = await AuthenticatedClient().GetAsync("/api/blueprints/mine");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<ListResponseShape>();
+        body!.Blueprints.Should().HaveCount(1);
+        body.Blueprints[0].Subtype.Should().Be("Pistol");
     }
 
     // ── GET /api/blueprints/search ─────────────────────────────────
@@ -171,7 +186,7 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
     {
         var blueprintId = Guid.NewGuid();
         _factory.Services.GetRequiredService<FakeUserBlueprintTestRepository>()
-            .AddResult = new MyBlueprintListItemDto(blueprintId, "Widget", "Weapon", 2);
+            .AddResult = new MyBlueprintListItemDto(blueprintId, "Widget", "Weapon", null, 2);
 
         var response = await AuthenticatedClient().PostAsync("/api/blueprints/mine",
             Json($$"""{"blueprintId":"{{blueprintId}}"}"""));
@@ -287,7 +302,7 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
     {
         var blueprintId = Guid.NewGuid();
         _factory.Services.GetRequiredService<FakeOrgBlueprintTestRepository>()
-            .ListResult = [new OrgBlueprintListItemDto(blueprintId, "Hull Panel", "Component", 2)];
+            .ListResult = [new OrgBlueprintListItemDto(blueprintId, "Hull Panel", "Component", null, 2)];
 
         var response = await AuthenticatedClient().GetAsync("/api/blueprints/org");
 
@@ -296,6 +311,21 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
         body!.Blueprints.Should().HaveCount(1);
         body.Blueprints[0].BlueprintId.Should().Be(blueprintId);
         body.Blueprints[0].ProductName.Should().Be("Hull Panel");
+    }
+
+    [Fact]
+    public async Task GetOrg_ResponseIncludesSubtype()
+    {
+        var blueprintId = Guid.NewGuid();
+        _factory.Services.GetRequiredService<FakeOrgBlueprintTestRepository>()
+            .ListResult = [new OrgBlueprintListItemDto(blueprintId, "Hull Panel", "Component", "Armor", 2)];
+
+        var response = await AuthenticatedClient().GetAsync("/api/blueprints/org");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<OrgListResponseShape>();
+        body!.Blueprints.Should().HaveCount(1);
+        body.Blueprints[0].Subtype.Should().Be("Armor");
     }
 
     // ── GET /api/blueprints/org/{blueprintId} ─────────────────────
@@ -341,7 +371,7 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
 
     // ── Response shapes ───────────────────────────────────────────
 
-    private sealed record ItemResponseShape(Guid BlueprintId, string? ProductName, string? Type, int IngredientCount);
+    private sealed record ItemResponseShape(Guid BlueprintId, string? ProductName, string? Type, string? Subtype, int IngredientCount);
     private sealed record ListResponseShape(List<ItemResponseShape> Blueprints);
     private sealed record SearchItemShape(Guid BlueprintId, string ProductName, string? Type);
     private sealed record SearchResponseShape(List<SearchItemShape> Results);
@@ -349,7 +379,7 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
     private sealed record SlotShape(int SlotIndex, string SlotName, List<SlotOptionShape> Options);
     private sealed record DetailResponseShape(Guid BlueprintId, string? ProductName, string? Type, int? CraftTimeSeconds, int IngredientCount, List<SlotShape> Slots);
     private sealed record OwnerShape(Guid UserId, string DisplayName);
-    private sealed record OrgItemShape(Guid BlueprintId, string? ProductName, string? Type, int IngredientCount);
+    private sealed record OrgItemShape(Guid BlueprintId, string? ProductName, string? Type, string? Subtype, int IngredientCount);
     private sealed record OrgListResponseShape(List<OrgItemShape> Blueprints);
     private sealed record OrgDetailResponseShape(Guid BlueprintId, string? ProductName, string? Type, int? CraftTimeSeconds, int IngredientCount, List<SlotShape> Slots, List<OwnerShape> Owners);
 }
@@ -382,7 +412,7 @@ internal sealed class FakeUserBlueprintTestRepository : IUserBlueprintRepository
     {
         if (ThrowNotFound) throw new BlueprintNotFoundException(blueprintId);
         if (ThrowDuplicate) throw new DuplicateBlueprintException(blueprintId);
-        return Task.FromResult(AddResult ?? new MyBlueprintListItemDto(blueprintId, null, null, 0));
+        return Task.FromResult(AddResult ?? new MyBlueprintListItemDto(blueprintId, null, null, null, 0));
     }
 
     public Task<BlueprintDetailDto?> GetDetailAsync(Guid userId, Guid blueprintId, CancellationToken ct = default) =>

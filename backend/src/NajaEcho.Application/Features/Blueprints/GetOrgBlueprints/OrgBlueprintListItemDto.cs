@@ -4,4 +4,5 @@ public sealed record OrgBlueprintListItemDto(
     Guid BlueprintId,
     string? ProductName,
     string? Type,
+    string? Subtype,
     int IngredientCount);

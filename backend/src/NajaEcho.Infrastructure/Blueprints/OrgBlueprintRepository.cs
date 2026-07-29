@@ -9,7 +9,7 @@ namespace NajaEcho.Infrastructure.Blueprints;
 
 public sealed class OrgBlueprintRepository(AppDbContext db) : IOrgBlueprintRepository
 {
-    private sealed record ListRow(Guid BlueprintId, string? ProductName, string? Type, int IngredientCount);
+    private sealed record ListRow(Guid BlueprintId, string? ProductName, string? Type, string? Subtype, int IngredientCount);
     private sealed record DetailHeaderRow(Guid BlueprintId, string? ProductName, string? Type, int? CraftTimeSeconds, int IngredientCount);
     private sealed record SlotOptionRow(int SlotIndex, string SlotName, int OptionIndex, string MaterialName, string Kind, decimal Quantity);
     private sealed record OwnerRow(Guid UserId, string DisplayName);
@@ -23,17 +23,18 @@ public sealed class OrgBlueprintRepository(AppDbContext db) : IOrgBlueprintRepos
               b.id                                    AS blueprint_id,
               b.product_name                          AS product_name,
               b.type                                  AS type,
+              b.subtype                               AS subtype,
               COUNT(DISTINCT bso.slot_index)::int     AS ingredient_count
             FROM user_blueprints ub
             JOIN sc.blueprints b ON b.id = ub.blueprint_id
             LEFT JOIN sc.blueprint_tiers bt ON bt.blueprint_id = b.id AND bt.tier_index = 0
             LEFT JOIN sc.blueprint_slot_options bso ON bso.tier_id = bt.id
-            GROUP BY b.id, b.product_name, b.type
+            GROUP BY b.id, b.product_name, b.type, b.subtype
             ORDER BY b.product_name NULLS LAST, b.id
             """).ToListAsync(ct);
 
         return rows
-            .Select(r => new OrgBlueprintListItemDto(r.BlueprintId, r.ProductName, r.Type, r.IngredientCount))
+            .Select(r => new OrgBlueprintListItemDto(r.BlueprintId, r.ProductName, r.Type, r.Subtype, r.IngredientCount))
             .ToList();
     }
 

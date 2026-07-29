@@ -52,7 +52,7 @@ describe('MyBlueprintsPage', () => {
       http.get('/api/blueprints/mine', () =>
         HttpResponse.json({
           blueprints: [
-            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', ingredientCount: 3 },
+            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', subtype: null, ingredientCount: 3 },
           ],
         }),
       ),
@@ -75,7 +75,7 @@ describe('MyBlueprintsPage', () => {
       http.get('/api/blueprints/mine', () =>
         HttpResponse.json({
           blueprints: [
-            { blueprintId: '22222222-2222-2222-2222-222222222222', productName: null, type: null, ingredientCount: 0 },
+            { blueprintId: '22222222-2222-2222-2222-222222222222', productName: null, type: null, subtype: null, ingredientCount: 0 },
           ],
         }),
       ),
@@ -103,7 +103,7 @@ describe('MyBlueprintsPage', () => {
       http.get('/api/blueprints/mine', () =>
         HttpResponse.json({
           blueprints: [
-            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', ingredientCount: 3 },
+            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', subtype: null, ingredientCount: 3 },
           ],
         }),
       ),
@@ -118,12 +118,105 @@ describe('MyBlueprintsPage', () => {
     expect(screen.getByRole('dialog')).toBeDefined()
   })
 
+  it('shows filter bar when blueprints are loaded', async () => {
+    server.use(
+      http.get('/api/blueprints/mine', () =>
+        HttpResponse.json({
+          blueprints: [
+            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', subtype: 'Pistol', ingredientCount: 3 },
+          ],
+        }),
+      ),
+    )
+    renderPage()
+
+    await waitFor(() => screen.getByText('Widget Mk1'))
+    expect(screen.getByPlaceholderText(/filter by name/i)).toBeDefined()
+    expect(screen.getByRole('combobox', { name: /category/i })).toBeDefined()
+  })
+
+  it('filtering by category hides non-matching rows', async () => {
+    server.use(
+      http.get('/api/blueprints/mine', () =>
+        HttpResponse.json({
+          blueprints: [
+            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', subtype: 'Pistol', ingredientCount: 3 },
+            { blueprintId: '22222222-2222-2222-2222-222222222222', productName: 'Hull Panel', type: 'Ship', subtype: null, ingredientCount: 1 },
+          ],
+        }),
+      ),
+    )
+    const { user } = renderPage()
+
+    await waitFor(() => screen.getByText('Widget Mk1'))
+    await user.click(screen.getByRole('combobox', { name: /category/i }))
+    await user.click(screen.getByText('Weapon'))
+
+    await waitFor(() => {
+      expect(screen.queryByText('Hull Panel')).toBeNull()
+    })
+    expect(screen.getByText('Widget Mk1')).toBeDefined()
+  })
+
+  it('shows filtered-empty state when no blueprints match', async () => {
+    server.use(
+      http.get('/api/blueprints/mine', () =>
+        HttpResponse.json({
+          blueprints: [
+            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', subtype: 'Pistol', ingredientCount: 3 },
+          ],
+        }),
+      ),
+    )
+    const { user } = renderPage()
+
+    await waitFor(() => screen.getByText('Widget Mk1'))
+    await user.type(screen.getByPlaceholderText(/filter by name/i), 'zzz')
+
+    await waitFor(() => {
+      expect(screen.getByText(/no blueprints match/i)).toBeDefined()
+    })
+  })
+
+  it('filter state persists when the detail panel is opened and closed', async () => {
+    server.use(
+      http.get('/api/blueprints/mine', () =>
+        HttpResponse.json({
+          blueprints: [
+            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', subtype: 'Pistol', ingredientCount: 3 },
+            { blueprintId: '22222222-2222-2222-2222-222222222222', productName: 'Hull Panel', type: 'Ship', subtype: null, ingredientCount: 1 },
+          ],
+        }),
+      ),
+    )
+    seedDetailHandler()
+
+    const { user } = renderPage()
+
+    await waitFor(() => screen.getByText('Widget Mk1'))
+
+    // Apply a category filter
+    await user.click(screen.getByRole('combobox', { name: /category/i }))
+    await user.click(screen.getByText('Weapon'))
+    await waitFor(() => expect(screen.queryByText('Hull Panel')).toBeNull())
+
+    // Open and close the detail panel
+    await user.click(screen.getAllByText('Widget Mk1')[0])
+    expect(screen.getByRole('dialog')).toBeDefined()
+    await user.click(screen.getByRole('button', { name: /close/i }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+
+    // Filter should still be applied
+    expect(screen.queryByText('Hull Panel')).toBeNull()
+    expect(screen.getByText('Widget Mk1')).toBeDefined()
+  })
+
   it('the detail panel closes when the X button is clicked', async () => {
     server.use(
       http.get('/api/blueprints/mine', () =>
         HttpResponse.json({
           blueprints: [
-            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', ingredientCount: 3 },
+            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', subtype: null, ingredientCount: 3 },
           ],
         }),
       ),

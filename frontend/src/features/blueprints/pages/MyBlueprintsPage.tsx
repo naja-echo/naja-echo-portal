@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import { useMyBlueprints } from '../hooks/useMyBlueprints'
+import { useBlueprintFilters } from '../hooks/useBlueprintFilters'
 import { AddBlueprintDialog } from '../components/AddBlueprintDialog'
 import { BlueprintDetailPanel } from '../components/BlueprintDetailPanel'
+import { BlueprintFilters } from '../components/BlueprintFilters'
 
 export function MyBlueprintsPage() {
   const [addOpen, setAddOpen] = useState(false)
@@ -11,6 +13,15 @@ export function MyBlueprintsPage() {
   const { data, isLoading } = useMyBlueprints()
 
   const blueprints = data?.blueprints ?? []
+  const {
+    filters,
+    setName,
+    setCategory,
+    setSubcategory,
+    categoryOptions,
+    subcategoryOptions,
+    filtered,
+  } = useBlueprintFilters(blueprints)
 
   return (
     <div className="flex flex-col gap-4">
@@ -22,12 +33,27 @@ export function MyBlueprintsPage() {
         </Button>
       </div>
 
+      {!isLoading && blueprints.length > 0 && (
+        <BlueprintFilters
+          name={filters.name}
+          category={filters.category}
+          subcategory={filters.subcategory}
+          categoryOptions={categoryOptions}
+          subcategoryOptions={subcategoryOptions}
+          onNameChange={setName}
+          onCategoryChange={setCategory}
+          onSubcategoryChange={setSubcategory}
+        />
+      )}
+
       {isLoading ? (
         <p className="text-muted-foreground">Loading…</p>
       ) : blueprints.length === 0 ? (
         <p className="text-muted-foreground">
           You have no blueprints yet. Add your first one!
         </p>
+      ) : filtered.length === 0 ? (
+        <p className="text-muted-foreground">No blueprints match the current filters.</p>
       ) : (
         <div className="rounded-md border">
           <table className="w-full text-sm">
@@ -39,7 +65,7 @@ export function MyBlueprintsPage() {
               </tr>
             </thead>
             <tbody>
-              {blueprints.map((bp) => (
+              {filtered.map((bp) => (
                 <tr
                   key={bp.blueprintId}
                   className="border-b last:border-0 cursor-pointer hover:bg-muted/50"
