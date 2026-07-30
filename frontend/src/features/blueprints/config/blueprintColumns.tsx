@@ -31,17 +31,6 @@ const DEFAULT_COLUMNS: BlueprintColumn[] = [
   { header: 'Ingredients', render: bp => bp.ingredientCount },
 ]
 
-const VEHICLE_GEAR_COLUMNS: BlueprintColumn[] = [
-  { header: 'Blueprint', render: bp => bp.productName ?? '—' },
-  { header: 'Type', render: bp => {
-    if (bp.type === 'weapons') return blueprintLabel(bp.subtype ?? 'misc')
-    return bp.type ? blueprintLabel(bp.type) : '—'
-  }, className: 'text-muted-foreground' },
-  { header: 'Size', render: bp => bp.componentSize != null ? String(bp.componentSize) : '—', className: 'text-muted-foreground' },
-  { header: 'Class', render: bp => bp.componentClass ?? '—', className: 'text-muted-foreground' },
-  { header: 'Grade', render: bp => bp.componentGrade ?? '—', className: 'text-muted-foreground' },
-  { header: 'Ingredients', render: bp => bp.ingredientCount },
-]
 
 const VEHICLE_GEAR_MINING_LASER_COLUMNS: BlueprintColumn[] = [
   { header: 'Blueprint', render: bp => bp.productName ?? '—' },

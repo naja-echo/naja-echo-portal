@@ -24,17 +24,15 @@ export interface BlueprintFiltersProps {
 }
 
 const isVehicleGear = (category: string) => category === 'vehiclegear'
-const isMiningLaser = (category: string, subcategory: string) =>
-  isVehicleGear(category) && subcategory === 'mininglaser'
-const isSalvage = (category: string, subcategory: string) =>
-  isVehicleGear(category) && subcategory === 'salvage'
-const isTractorBeam = (category: string, subcategory: string) =>
-  isVehicleGear(category) && subcategory === 'tractorbeam'
 
 // Subcategories where the item-type ("All types") filter is not applicable.
 const HIDE_ITEM_TYPE_FILTER = new Set([
   'mininglaser', 'tractorbeam', 'cooler', 'quantumdrive', 'shield', 'radar',
 ])
+// Subcategories where the component size ("All sizes") filter is not applicable.
+const HIDE_SIZE_FILTER = new Set(['salvage'])
+// Subcategories where the grade filter is not applicable.
+const HIDE_GRADE_FILTER = new Set(['mininglaser', 'salvage', 'tractorbeam', 'weapons'])
 
 export function BlueprintFilters({
   name, category, subcategory, itemType,
@@ -45,9 +43,6 @@ export function BlueprintFilters({
   onComponentClassChange, onComponentSizeChange, onComponentGradeChange,
 }: BlueprintFiltersProps) {
   const vehicleGear = isVehicleGear(category)
-  const miningLaser = isMiningLaser(category, subcategory)
-  const salvage = isSalvage(category, subcategory)
-  const tractorBeam = isTractorBeam(category, subcategory)
 
   return (
     <div className="flex flex-wrap gap-3">
@@ -103,7 +98,7 @@ export function BlueprintFilters({
         </div>
       )}
 
-      {vehicleGear && subcategory !== '' && !salvage && componentSizeOptions.length > 0 && (
+      {vehicleGear && subcategory !== '' && !HIDE_SIZE_FILTER.has(subcategory) && componentSizeOptions.length > 0 && (
         <div className="flex flex-col gap-1">
           <label className="text-xs text-muted-foreground">Size</label>
           <Combobox
@@ -133,7 +128,7 @@ export function BlueprintFilters({
         </div>
       )}
 
-      {vehicleGear && subcategory !== '' && !miningLaser && !salvage && !tractorBeam && subcategory !== 'weapons' && componentGradeOptions.length > 0 && (
+      {vehicleGear && subcategory !== '' && !HIDE_GRADE_FILTER.has(subcategory) && componentGradeOptions.length > 0 && (
         <div className="flex flex-col gap-1">
           <label className="text-xs text-muted-foreground">Grade</label>
           <Combobox
