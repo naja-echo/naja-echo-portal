@@ -9,6 +9,10 @@ const defaultProps = {
   name: '',
   category: '',
   subcategory: '',
+  itemType: '',
+  componentClass: '',
+  componentSize: '',
+  componentGrade: '',
   categoryOptions: [
     { value: 'Weapon', label: 'Weapon' },
     { value: 'Ship', label: 'Ship' },
@@ -17,9 +21,17 @@ const defaultProps = {
     { value: 'Pistol', label: 'Pistol' },
     { value: 'Fighter', label: 'Fighter' },
   ],
+  itemTypeOptions: [],
+  componentClassOptions: [],
+  componentSizeOptions: [],
+  componentGradeOptions: [],
   onNameChange: noop,
   onCategoryChange: noop,
   onSubcategoryChange: noop,
+  onItemTypeChange: noop,
+  onComponentClassChange: noop,
+  onComponentSizeChange: noop,
+  onComponentGradeChange: noop,
 }
 
 describe('BlueprintFilters', () => {

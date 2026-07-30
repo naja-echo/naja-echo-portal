@@ -11,7 +11,7 @@ function renderPanel(blueprintId: string | null = BLUEPRINT_ID) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={client}>
-      <OrgBlueprintDetailPanel blueprintId={blueprintId} onClose={() => {}} />
+      <OrgBlueprintDetailPanel blueprintId={blueprintId} subtype={null} tag={null} onClose={() => {}} />
     </QueryClientProvider>,
   )
 }

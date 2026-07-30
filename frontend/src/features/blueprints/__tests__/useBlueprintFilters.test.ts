@@ -8,6 +8,10 @@ const BP = (overrides: Partial<{
   type: string | null
   subtype: string | null
   gear: string | null
+  tag: string | null
+  componentClass: string | null
+  componentSize: number | null
+  componentGrade: string | null
   ingredientCount: number
 }> = {}) => ({
   blueprintId: '11111111-1111-1111-1111-111111111111',
@@ -15,6 +19,10 @@ const BP = (overrides: Partial<{
   type: 'Weapon',
   subtype: 'Pistol',
   gear: 'spacegear',
+  tag: null,
+  componentClass: null,
+  componentSize: null,
+  componentGrade: null,
   ingredientCount: 2,
   ...overrides,
 })
