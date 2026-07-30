@@ -15,7 +15,7 @@ function renderPanel(blueprintId: string | null = BLUEPRINT_ID, onClose = vi.fn(
     onClose,
     ...render(
       <QueryClientProvider client={client}>
-        <BlueprintDetailPanel blueprintId={blueprintId} onClose={onClose} />
+        <BlueprintDetailPanel blueprintId={blueprintId} subtype={null} tag={null} onClose={onClose} />
       </QueryClientProvider>,
     ),
   }

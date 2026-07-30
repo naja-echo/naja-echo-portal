@@ -52,8 +52,26 @@ export const blueprintListResponseSchema = z.object({
   blueprints: z.array(blueprintListItemSchema),
 })
 
+export const craftingItemsSchema = z
+  .object({
+    version: z.string(),
+    items: z.array(z.unknown()),
+  })
+  .passthrough()
+  // Reject blueprint dataset files, which also have 'version' and 'items' but
+  // additionally carry 'blueprints' and 'resources' keys.
+  .refine((d) => !('blueprints' in d) && !('resources' in d), {
+    message: 'Looks like a blueprint dataset file, not a crafting items file.',
+  })
+
+export const enrichBlueprintsResponseSchema = z.object({
+  itemsParsed: z.number(),
+  blueprintsUpdated: z.number(),
+})
+
 export type CollectionCounts = z.infer<typeof collectionCountsSchema>
 export type BlueprintRejection = z.infer<typeof blueprintRejectionSchema>
 export type ImportBlueprintsResponse = z.infer<typeof importBlueprintsResponseSchema>
+export type EnrichBlueprintsResponse = z.infer<typeof enrichBlueprintsResponseSchema>
 export type BlueprintListItem = z.infer<typeof blueprintListItemSchema>
 export type BlueprintListResponse = z.infer<typeof blueprintListResponseSchema>

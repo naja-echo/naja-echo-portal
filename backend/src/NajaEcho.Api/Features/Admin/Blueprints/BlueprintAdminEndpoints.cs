@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using NajaEcho.Api.Authorization;
 using NajaEcho.Api.Features.Admin.Blueprints.Contracts;
+using NajaEcho.Application.Features.Blueprints.EnrichBlueprints;
 using NajaEcho.Application.Features.Blueprints.GetBlueprints;
 using NajaEcho.Application.Features.Blueprints.ImportBlueprints;
 using NajaEcho.Application.Features.Ships.ImportShips;
@@ -18,6 +19,9 @@ public static class BlueprintAdminEndpoints
         var group = app.MapGroup("/api/admin/blueprints").RequireAuthorization(AuthorizationPolicies.Admin);
 
         group.MapPost("/import", ImportBlueprints)
+            .WithMetadata(new RequestSizeLimitAttribute(MaxUploadBytes));
+
+        group.MapPost("/enrich-items", EnrichBlueprints)
             .WithMetadata(new RequestSizeLimitAttribute(MaxUploadBytes));
 
         group.MapGet("/", GetBlueprints);
@@ -53,6 +57,37 @@ public static class BlueprintAdminEndpoints
         catch (ImportAlreadyInProgressException)
         {
             return Results.Conflict(new { title = "An import or refresh is already in progress.", status = 409 });
+        }
+        finally
+        {
+            body?.Dispose();
+        }
+    }
+
+    private static async Task<IResult> EnrichBlueprints(
+        JsonDocument? body,
+        EnrichBlueprintsHandler handler,
+        CancellationToken ct)
+    {
+        if (body is null)
+        {
+            return Results.Problem(
+                detail: "The request body must be a JSON crafting items document.",
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Invalid items document.");
+        }
+
+        try
+        {
+            var result = await handler.HandleAsync(new EnrichBlueprintsCommand(body.RootElement), ct);
+            return Results.Ok(new EnrichBlueprintsResponse(result.ItemsParsed, result.BlueprintsUpdated));
+        }
+        catch (InvalidCraftingItemsDocumentException ex)
+        {
+            return Results.Problem(
+                detail: ex.Message,
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Invalid items document.");
         }
         finally
         {

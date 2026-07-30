@@ -48,7 +48,7 @@ public class GetBlueprintDetailHandlerTests
     public async Task Handle_BlueprintInUserList_ReturnsCorrectFields()
     {
         var blueprintId = Guid.NewGuid();
-        var detail = new BlueprintDetailDto(blueprintId, "Quantum Drive", "Component", 330, 5,
+        var detail = new BlueprintDetailDto(blueprintId, "Quantum Drive", "Component", 330, 5, null, null, null,
             [new BlueprintSlotDto(0, "Cast Iron", [new BlueprintSlotOptionDto(0, "Iron Ore", "material", 1.5m)])]);
 
         var repo = new FakeRepo();
@@ -72,7 +72,7 @@ public class GetBlueprintDetailHandlerTests
     public async Task Handle_BlueprintWithNoSlots_ReturnsEmptySlotsCollection()
     {
         var blueprintId = Guid.NewGuid();
-        var detail = new BlueprintDetailDto(blueprintId, "Widget", null, null, 0, []);
+        var detail = new BlueprintDetailDto(blueprintId, "Widget", null, null, 0, null, null, null, []);
 
         var repo = new FakeRepo();
         repo.SeedDetail(UserId, detail);

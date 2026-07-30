@@ -6,6 +6,9 @@ public sealed record BlueprintDetailDto(
     string? Type,
     int? CraftTimeSeconds,
     int IngredientCount,
+    string? ComponentClass,
+    int? ComponentSize,
+    string? ComponentGrade,
     IReadOnlyList<BlueprintSlotDto> Slots);
 
 public sealed record BlueprintSlotDto(

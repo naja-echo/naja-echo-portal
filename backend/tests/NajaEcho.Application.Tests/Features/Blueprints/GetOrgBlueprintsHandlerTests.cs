@@ -39,7 +39,7 @@ public class GetOrgBlueprintsHandlerTests
     {
         var blueprintId = Guid.NewGuid();
         var repo = new FakeRepo();
-        repo.SeedList([new OrgBlueprintListItemDto(blueprintId, "Widget Mk1", "Weapon", 3)]);
+        repo.SeedList([new OrgBlueprintListItemDto(blueprintId, "Widget Mk1", "Weapon", null, null, null, null, null, null, 3)]);
         var handler = new GetOrgBlueprintsHandler(repo);
 
         var result = await handler.HandleAsync(new GetOrgBlueprintsQuery(UserId));

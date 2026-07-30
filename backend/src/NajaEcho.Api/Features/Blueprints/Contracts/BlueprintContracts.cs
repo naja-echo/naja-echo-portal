@@ -17,6 +17,9 @@ public sealed record BlueprintDetailResponse(
     string? Type,
     int? CraftTimeSeconds,
     int IngredientCount,
+    string? ComponentClass,
+    int? ComponentSize,
+    string? ComponentGrade,
     IReadOnlyList<BlueprintSlotResponse> Slots);
 
 public sealed record BlueprintSearchResultResponse(
@@ -31,6 +34,12 @@ public sealed record MyBlueprintListItemResponse(
     Guid BlueprintId,
     string? ProductName,
     string? Type,
+    string? Subtype,
+    string? Gear,
+    string? Tag,
+    string? ComponentClass,
+    int? ComponentSize,
+    string? ComponentGrade,
     int IngredientCount);
 
 public sealed record MyBlueprintListResponse(
@@ -42,6 +51,12 @@ public sealed record OrgBlueprintListItemResponse(
     Guid BlueprintId,
     string? ProductName,
     string? Type,
+    string? Subtype,
+    string? Gear,
+    string? Tag,
+    string? ComponentClass,
+    int? ComponentSize,
+    string? ComponentGrade,
     int IngredientCount);
 
 public sealed record OrgBlueprintListResponse(
@@ -55,5 +70,8 @@ public sealed record OrgBlueprintDetailResponse(
     string? Type,
     int? CraftTimeSeconds,
     int IngredientCount,
+    string? ComponentClass,
+    int? ComponentSize,
+    string? ComponentGrade,
     IReadOnlyList<BlueprintSlotResponse> Slots,
     IReadOnlyList<BlueprintOwnerResponse> Owners);

@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NajaEcho.Application.Abstractions;
 using NajaEcho.Application.Features.Auth.GetCurrentUser;
 using NajaEcho.Application.Features.Blueprints.AddMyBlueprint;
+using NajaEcho.Application.Features.Blueprints.EnrichBlueprints;
 using NajaEcho.Application.Features.Blueprints.GetBlueprintDetail;
 using NajaEcho.Application.Features.Blueprints.GetBlueprints;
 using NajaEcho.Application.Features.Blueprints.GetMyBlueprints;
@@ -236,6 +237,7 @@ public static class DependencyInjection
         // Crafting Blueprints
         services.AddScoped<IBlueprintRepository, BlueprintRepository>();
         services.AddScoped<ImportBlueprintsHandler>();
+        services.AddScoped<EnrichBlueprintsHandler>();
         services.AddScoped<GetBlueprintsHandler>();
         services.AddScoped<SearchBlueprintsHandler>();
 

@@ -190,6 +190,63 @@ public class BlueprintAdminEndpointsTests : IClassFixture<WebApplicationFactory<
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 
+    // ── Enrich (component attributes) ────────────────────────────────────────
+
+    private const string ValidCraftingItemsDoc = """
+    {
+      "version": "4.9.0",
+      "items": [
+        { "entityClass": "39424912-de99-46d1-87a6-0f59696ca60b", "size": 2, "grade": 2, "componentClass": "Civilian" }
+      ]
+    }
+    """;
+
+    [Fact]
+    public async Task Enrich_Unauthenticated_Returns401()
+    {
+        var response = await AnonymousClient().PostAsync("/api/admin/blueprints/enrich-items", Json(ValidCraftingItemsDoc));
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Enrich_NonAdmin_Returns403()
+    {
+        var response = await NonAdminClient().PostAsync("/api/admin/blueprints/enrich-items", Json(ValidCraftingItemsDoc));
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Enrich_Admin_ValidDocument_Returns200WithCounts()
+    {
+        ResetFakes();
+        _factory.Services.GetRequiredService<FakeBlueprintRepository>().EnrichResult = 1;
+
+        var response = await AdminClient().PostAsync("/api/admin/blueprints/enrich-items", Json(ValidCraftingItemsDoc));
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var body = await response.Content.ReadFromJsonAsync<EnrichResponseShape>();
+        body.Should().NotBeNull();
+        body!.ItemsParsed.Should().Be(1);
+        body.BlueprintsUpdated.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Enrich_Admin_NullBody_Returns400()
+    {
+        var response = await AdminClient().PostAsync("/api/admin/blueprints/enrich-items",
+            new StringContent("", Encoding.UTF8, "application/json"));
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Enrich_Admin_InvalidDocument_Returns400()
+    {
+        // Document missing "items" key should be rejected by the parser.
+        var response = await AdminClient().PostAsync("/api/admin/blueprints/enrich-items",
+            Json("""{ "version": "1.0" }"""));
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
     // ── Listing (US2) ────────────────────────────────────────────────────────
 
     [Fact]
@@ -214,6 +271,8 @@ public class BlueprintAdminEndpointsTests : IClassFixture<WebApplicationFactory<
     // ── Response DTOs for assertions ─────────────────────────────────────────
 
     private sealed record CountsShape(int Read, int Inserted, int Updated, int Rejected);
+
+    private sealed record EnrichResponseShape(int ItemsParsed, int BlueprintsUpdated);
 
     private sealed record ImportResponseShape(
         string Version, CountsShape Blueprints, CountsShape Resources, CountsShape Items,
@@ -247,12 +306,14 @@ internal sealed class FakeBlueprintRepository : IBlueprintRepository
     public bool ImportCalled { get; private set; }
     public BlueprintImportCounts Counts { get; set; } = new(0, 0);
     public IReadOnlyList<BlueprintListItemDto> List { get; set; } = [];
+    public int EnrichResult { get; set; }
 
     public void Reset()
     {
         ImportCalled = false;
         Counts = new BlueprintImportCounts(0, 0);
         List = [];
+        EnrichResult = 0;
     }
 
     public Task<IReadOnlyDictionary<string, MaterialMatch>> ResolveMaterialsAsync(
@@ -271,6 +332,9 @@ internal sealed class FakeBlueprintRepository : IBlueprintRepository
     public Task<IReadOnlyList<NajaEcho.Application.Features.Blueprints.SearchBlueprints.BlueprintSearchResultDto>> SearchAsync(
         string term, int limit = 20, CancellationToken ct = default) =>
         Task.FromResult<IReadOnlyList<NajaEcho.Application.Features.Blueprints.SearchBlueprints.BlueprintSearchResultDto>>([]);
+
+    public Task<int> EnrichAsync(IReadOnlyList<NajaEcho.Application.Features.Blueprints.EnrichBlueprints.ParsedItemAttributes> items, CancellationToken ct = default) =>
+        Task.FromResult(EnrichResult);
 }
 
 internal sealed class FakeBlueprintLoginService : IExternalLoginService

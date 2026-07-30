@@ -29,6 +29,10 @@ public sealed class CraftingBlueprintConfiguration : IEntityTypeConfiguration<Cr
             .HasColumnType("jsonb")
             .IsRequired();
 
+        builder.Property(b => b.ComponentClass).HasColumnName("component_class").HasMaxLength(64);
+        builder.Property(b => b.ComponentSize).HasColumnName("component_size");
+        builder.Property(b => b.ComponentGrade).HasColumnName("component_grade").HasMaxLength(8);
+
         builder.Property(b => b.ImportedAt).HasColumnName("imported_at").IsRequired();
         builder.Property(b => b.UpdatedAt).HasColumnName("updated_at").IsRequired();
 

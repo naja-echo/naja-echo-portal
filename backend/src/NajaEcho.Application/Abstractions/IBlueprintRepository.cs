@@ -1,3 +1,4 @@
+using NajaEcho.Application.Features.Blueprints.EnrichBlueprints;
 using NajaEcho.Application.Features.Blueprints.GetBlueprints;
 using NajaEcho.Application.Features.Blueprints.ImportBlueprints;
 using NajaEcho.Application.Features.Blueprints.SearchBlueprints;
@@ -35,4 +36,11 @@ public interface IBlueprintRepository
     /// <paramref name="limit"/> results. Only blueprints with a non-null product_name are returned.
     /// </summary>
     Task<IReadOnlyList<BlueprintSearchResultDto>> SearchAsync(string term, int limit = 20, CancellationToken ct = default);
+
+    /// <summary>
+    /// Updates component_class, component_size, and component_grade on blueprints whose
+    /// product_entity_class matches an entityClass in the supplied items list.
+    /// Returns the number of blueprint rows updated.
+    /// </summary>
+    Task<int> EnrichAsync(IReadOnlyList<ParsedItemAttributes> items, CancellationToken ct = default);
 }

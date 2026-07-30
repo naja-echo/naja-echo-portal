@@ -22,6 +22,9 @@ public sealed class CraftingBlueprint
     public Guid? SuggestedProductEntityClass { get; set; }
     public bool? CigDataError { get; set; }
     public JsonDocument Tiers { get; set; } = JsonDocument.Parse("[]");
+    public string? ComponentClass { get; set; }
+    public short? ComponentSize { get; set; }
+    public string? ComponentGrade { get; set; }
     public DateTimeOffset ImportedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 }

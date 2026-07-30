@@ -197,6 +197,20 @@ namespace NajaEcho.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("cig_data_error");
 
+                    b.Property<string>("ComponentClass")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("component_class");
+
+                    b.Property<string>("ComponentGrade")
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasColumnName("component_grade");
+
+                    b.Property<short?>("ComponentSize")
+                        .HasColumnType("smallint")
+                        .HasColumnName("component_size");
+
                     b.Property<string>("Gear")
                         .IsRequired()
                         .HasMaxLength(256)

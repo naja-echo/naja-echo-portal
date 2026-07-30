@@ -1,0 +1,123 @@
+openapi: 3.1.0
+info:
+  title: NajaEcho Portal API — Blueprint Filtering (Feature 028)
+  version: "1.0.0"
+  description: |
+    Contract changes introduced by feature 028: Blueprint Filtering.
+    No new endpoints are added. Two existing list response schemas are updated
+    to include the nullable `subtype` field, enabling client-side subcategory filtering.
+    All endpoints require an authenticated session cookie.
+
+paths:
+  /api/blueprints/mine:
+    get:
+      summary: List user's blueprints
+      description: |
+        Returns all blueprints saved by the authenticated user.
+        Updated in 028: response items now include `subtype`.
+      operationId: getMyBlueprints
+      tags: [Blueprints]
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: List of the user's personal blueprints
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MyBlueprintListResponse"
+        "401":
+          description: Not authenticated
+
+  /api/blueprints/org:
+    get:
+      summary: List org blueprints
+      description: |
+        Returns a deduplicated list of all blueprints held by any member of the
+        authenticated user's current organization.
+        Updated in 028: response items now include `subtype`.
+      operationId: getOrgBlueprints
+      tags: [Blueprints]
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Deduplicated list of org blueprints
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrgBlueprintListResponse"
+        "401":
+          description: Not authenticated
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: __Host-session
+
+  schemas:
+    MyBlueprintListResponse:
+      type: object
+      required: [blueprints]
+      properties:
+        blueprints:
+          type: array
+          items:
+            $ref: "#/components/schemas/MyBlueprintListItem"
+
+    MyBlueprintListItem:
+      type: object
+      required: [blueprintId, ingredientCount]
+      properties:
+        blueprintId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+          nullable: true
+          description: Display name of the craftable product
+        type:
+          type: string
+          nullable: true
+          description: Blueprint category (maps to sc.blueprints.type)
+        subtype:
+          type: string
+          nullable: true
+          description: Blueprint subcategory (maps to sc.blueprints.subtype) — NEW in 028
+        ingredientCount:
+          type: integer
+          description: Number of distinct ingredient slots in the first crafting tier
+
+    OrgBlueprintListResponse:
+      type: object
+      required: [blueprints]
+      properties:
+        blueprints:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrgBlueprintListItem"
+
+    OrgBlueprintListItem:
+      type: object
+      required: [blueprintId, ingredientCount]
+      properties:
+        blueprintId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+          nullable: true
+          description: Display name of the craftable product
+        type:
+          type: string
+          nullable: true
+          description: Blueprint category (maps to sc.blueprints.type)
+        subtype:
+          type: string
+          nullable: true
+          description: Blueprint subcategory (maps to sc.blueprints.subtype) — NEW in 028
+        ingredientCount:
+          type: integer
+          description: Number of distinct ingredient slots in the first crafting tier
