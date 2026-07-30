@@ -15,8 +15,10 @@ export function OrgBlueprintsPage() {
     setName,
     setCategory,
     setSubcategory,
+    setArmorType,
     categoryOptions,
     subcategoryOptions,
+    armorTypeOptions,
     filtered,
   } = useBlueprintFilters(blueprints)
 
@@ -31,11 +33,14 @@ export function OrgBlueprintsPage() {
           name={filters.name}
           category={filters.category}
           subcategory={filters.subcategory}
+          armorType={filters.armorType}
           categoryOptions={categoryOptions}
           subcategoryOptions={subcategoryOptions}
+          armorTypeOptions={armorTypeOptions}
           onNameChange={setName}
           onCategoryChange={setCategory}
           onSubcategoryChange={setSubcategory}
+          onArmorTypeChange={setArmorType}
         />
       )}
 

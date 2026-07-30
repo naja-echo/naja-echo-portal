@@ -1,9 +1,10 @@
-import { blueprintLabel } from './blueprintLabels'
+import { blueprintLabel, extractArmorType } from './blueprintLabels'
 
 interface BlueprintRow {
   productName: string | null
   type: string | null
   subtype: string | null
+  tag: string | null
   ingredientCount: number
 }
 
@@ -15,7 +16,11 @@ export interface BlueprintColumn {
 
 const DEFAULT_COLUMNS: BlueprintColumn[] = [
   { header: 'Blueprint', render: bp => bp.productName ?? '—' },
-  { header: 'Type', render: bp => bp.type ? blueprintLabel(bp.type) : '—', className: 'text-muted-foreground' },
+  { header: 'Type', render: bp => {
+    const armorType = extractArmorType(bp.tag)
+    const display = armorType ?? bp.type
+    return display ? blueprintLabel(display) : '—'
+  }, className: 'text-muted-foreground' },
   { header: 'Ingredients', render: bp => bp.ingredientCount },
 ]
 

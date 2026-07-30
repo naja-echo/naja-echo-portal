@@ -1,3 +1,11 @@
+export const ARMOR_PARTS = ['helmet', 'core', 'arms', 'legs', 'backpack'] as const
+
+export function extractArmorType(tag: string | null): string | null {
+  if (!tag) return null
+  const lower = tag.toLowerCase()
+  return ARMOR_PARTS.find(part => lower.includes(part)) ?? null
+}
+
 export const CATEGORY_LABELS: Record<string, string> = {
   armour: 'Armor',
   mininglaser: 'Mining Laser',
@@ -14,6 +22,12 @@ export const CATEGORY_LABELS: Record<string, string> = {
   tractorbeam: 'Tractor Beam',
   fpsgear: 'FPS Gear',
   vehiclegear: 'Vehicle Gear',
+  // Armor body part types (derived from blueprint tag)
+  helmet: 'Helmet',
+  core: 'Core',
+  arms: 'Arms',
+  legs: 'Legs',
+  backpack: 'Backpack',
 }
 
 export function blueprintLabel(value: string): string {

@@ -4,22 +4,28 @@ export interface BlueprintFiltersProps {
   name: string
   category: string
   subcategory: string
+  armorType: string
   categoryOptions: ComboboxOption[]
   subcategoryOptions: ComboboxOption[]
+  armorTypeOptions: ComboboxOption[]
   onNameChange: (v: string) => void
   onCategoryChange: (v: string) => void
   onSubcategoryChange: (v: string) => void
+  onArmorTypeChange: (v: string) => void
 }
 
 export function BlueprintFilters({
   name,
   category,
   subcategory,
+  armorType,
   categoryOptions,
   subcategoryOptions,
+  armorTypeOptions,
   onNameChange,
   onCategoryChange,
   onSubcategoryChange,
+  onArmorTypeChange,
 }: BlueprintFiltersProps) {
   return (
     <div className="flex flex-wrap gap-3">
@@ -59,6 +65,21 @@ export function BlueprintFilters({
           aria-label="Subcategory"
         />
       </div>
+
+      {subcategory !== '' && armorTypeOptions.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-muted-foreground">Type</label>
+          <Combobox
+            options={armorTypeOptions}
+            value={armorType}
+            onValueChange={onArmorTypeChange}
+            placeholder="All types"
+            searchPlaceholder="Search types…"
+            className="w-36"
+            aria-label="Type"
+          />
+        </div>
+      )}
     </div>
   )
 }

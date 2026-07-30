@@ -1,5 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { useGetOrgBlueprintDetail } from '../hooks/useGetOrgBlueprintDetail'
+import { blueprintLabel } from '../config/blueprintLabels'
 
 interface OrgBlueprintDetailPanelProps {
   blueprintId: string | null
@@ -33,7 +34,7 @@ export function OrgBlueprintDetailPanel({ blueprintId, onClose }: OrgBlueprintDe
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
                 <p className="text-muted-foreground font-medium">Type</p>
-                <p>{data.type ?? '—'}</p>
+                <p>{data.type ? blueprintLabel(data.type) : '—'}</p>
               </div>
               <div>
                 <p className="text-muted-foreground font-medium">Craft Time</p>

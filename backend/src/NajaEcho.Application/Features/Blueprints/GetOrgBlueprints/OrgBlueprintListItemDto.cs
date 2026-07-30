@@ -6,4 +6,5 @@ public sealed record OrgBlueprintListItemDto(
     string? Type,
     string? Subtype,
     string? Gear,
+    string? Tag,
     int IngredientCount);

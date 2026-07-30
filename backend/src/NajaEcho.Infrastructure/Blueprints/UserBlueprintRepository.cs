@@ -10,7 +10,7 @@ namespace NajaEcho.Infrastructure.Blueprints;
 
 public sealed class UserBlueprintRepository(AppDbContext db) : IUserBlueprintRepository
 {
-    private sealed record ListRow(Guid BlueprintId, string? ProductName, string? Type, string? Subtype, string? Gear, int IngredientCount);
+    private sealed record ListRow(Guid BlueprintId, string? ProductName, string? Type, string? Subtype, string? Gear, string? Tag, int IngredientCount);
     private sealed record DetailHeaderRow(Guid BlueprintId, string? ProductName, string? Type, int? CraftTimeSeconds, int IngredientCount);
     private sealed record SlotOptionRow(int SlotIndex, string SlotName, int OptionIndex, string MaterialName, string Kind, decimal Quantity);
 
@@ -23,18 +23,19 @@ public sealed class UserBlueprintRepository(AppDbContext db) : IUserBlueprintRep
               b.type                                                       AS type,
               b.subtype                                                    AS subtype,
               b.gear                                                       AS gear,
+              b.tag                                                        AS tag,
               COUNT(DISTINCT bso.slot_index)::int                         AS ingredient_count
             FROM user_blueprints ub
             JOIN sc.blueprints b ON b.id = ub.blueprint_id
             LEFT JOIN sc.blueprint_tiers bt ON bt.blueprint_id = b.id AND bt.tier_index = 0
             LEFT JOIN sc.blueprint_slot_options bso ON bso.tier_id = bt.id
             WHERE ub.user_id = {userId}
-            GROUP BY b.id, b.product_name, b.type, b.subtype, b.gear
+            GROUP BY b.id, b.product_name, b.type, b.subtype, b.gear, b.tag
             ORDER BY b.product_name NULLS LAST, b.id
             """).ToListAsync(ct);
 
         return rows
-            .Select(r => new MyBlueprintListItemDto(r.BlueprintId, r.ProductName, r.Type, r.Subtype, r.Gear, r.IngredientCount))
+            .Select(r => new MyBlueprintListItemDto(r.BlueprintId, r.ProductName, r.Type, r.Subtype, r.Gear, r.Tag, r.IngredientCount))
             .ToList();
     }
 
@@ -42,7 +43,7 @@ public sealed class UserBlueprintRepository(AppDbContext db) : IUserBlueprintRep
     {
         var blueprint = await db.Blueprints
             .Where(b => b.Id == blueprintId)
-            .Select(b => new { b.Id, b.ProductName, b.Type, b.Subtype, b.Gear })
+            .Select(b => new { b.Id, b.ProductName, b.Type, b.Subtype, b.Gear, b.Tag })
             .FirstOrDefaultAsync(ct)
             ?? throw new BlueprintNotFoundException(blueprintId);
 
@@ -73,7 +74,7 @@ public sealed class UserBlueprintRepository(AppDbContext db) : IUserBlueprintRep
               AND bt.tier_index = 0
             """).FirstOrDefaultAsync(ct);
 
-        return new MyBlueprintListItemDto(blueprint.Id, blueprint.ProductName, blueprint.Type, blueprint.Subtype, blueprint.Gear, ingredientCount);
+        return new MyBlueprintListItemDto(blueprint.Id, blueprint.ProductName, blueprint.Type, blueprint.Subtype, blueprint.Gear, blueprint.Tag, ingredientCount);
     }
 
     public async Task<BlueprintDetailDto?> GetDetailAsync(Guid userId, Guid blueprintId, CancellationToken ct = default)

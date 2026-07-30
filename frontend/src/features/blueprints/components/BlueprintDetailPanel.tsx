@@ -3,6 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Button } from '@/components/ui/button'
 import { useGetBlueprintDetail } from '../hooks/useGetBlueprintDetail'
 import { useRemoveMyBlueprint } from '../hooks/useRemoveMyBlueprint'
+import { blueprintLabel } from '../config/blueprintLabels'
 
 interface BlueprintDetailPanelProps {
   blueprintId: string | null
@@ -48,7 +49,7 @@ export function BlueprintDetailPanel({ blueprintId, onClose }: BlueprintDetailPa
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
                 <p className="text-muted-foreground font-medium">Type</p>
-                <p>{data.type ?? '—'}</p>
+                <p>{data.type ? blueprintLabel(data.type) : '—'}</p>
               </div>
               <div>
                 <p className="text-muted-foreground font-medium">Craft Time</p>
