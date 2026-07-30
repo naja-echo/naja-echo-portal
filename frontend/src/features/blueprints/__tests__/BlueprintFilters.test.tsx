@@ -30,7 +30,7 @@ describe('BlueprintFilters', () => {
 
   it('renders category combobox', () => {
     render(<BlueprintFilters {...defaultProps} />)
-    expect(screen.getByRole('combobox', { name: /category/i })).toBeDefined()
+    expect(screen.getByRole('combobox', { name: 'Category' })).toBeDefined()
   })
 
   it('renders subcategory combobox', () => {
@@ -55,7 +55,7 @@ describe('BlueprintFilters', () => {
     const onCategoryChange = vi.fn()
     const user = userEvent.setup()
     render(<BlueprintFilters {...defaultProps} onCategoryChange={onCategoryChange} />)
-    await user.click(screen.getByRole('combobox', { name: /category/i }))
+    await user.click(screen.getByRole('combobox', { name: 'Category' }))
     await user.click(screen.getByText('Weapon'))
     expect(onCategoryChange).toHaveBeenCalledWith('Weapon')
   })

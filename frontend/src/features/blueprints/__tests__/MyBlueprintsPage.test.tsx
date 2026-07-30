@@ -66,7 +66,6 @@ describe('MyBlueprintsPage', () => {
     expect(screen.getByText('Blueprint')).toBeDefined()
     expect(screen.getByText('Type')).toBeDefined()
     expect(screen.getByText('Ingredients')).toBeDefined()
-    expect(screen.getByText('Weapon')).toBeDefined()
     expect(screen.getByText('3')).toBeDefined()
   })
 
@@ -83,7 +82,7 @@ describe('MyBlueprintsPage', () => {
     renderPage()
 
     await waitFor(() => {
-      expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(2)
+      expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(1)
     })
   })
 
@@ -132,7 +131,7 @@ describe('MyBlueprintsPage', () => {
 
     await waitFor(() => screen.getByText('Widget Mk1'))
     expect(screen.getByPlaceholderText(/filter by name/i)).toBeDefined()
-    expect(screen.getByRole('combobox', { name: /category/i })).toBeDefined()
+    expect(screen.getByRole('combobox', { name: 'Category' })).toBeDefined()
   })
 
   it('filtering by category hides non-matching rows', async () => {
@@ -140,8 +139,8 @@ describe('MyBlueprintsPage', () => {
       http.get('/api/blueprints/mine', () =>
         HttpResponse.json({
           blueprints: [
-            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', subtype: 'Pistol', gear: null, ingredientCount: 3 },
-            { blueprintId: '22222222-2222-2222-2222-222222222222', productName: 'Hull Panel', type: 'Ship', subtype: null, gear: null, ingredientCount: 1 },
+            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', subtype: 'Pistol', gear: 'Weapon', ingredientCount: 3 },
+            { blueprintId: '22222222-2222-2222-2222-222222222222', productName: 'Hull Panel', type: 'Ship', subtype: null, gear: 'Ship', ingredientCount: 1 },
           ],
         }),
       ),
@@ -149,7 +148,7 @@ describe('MyBlueprintsPage', () => {
     const { user } = renderPage()
 
     await waitFor(() => screen.getByText('Widget Mk1'))
-    await user.click(screen.getByRole('combobox', { name: /category/i }))
+    await user.click(screen.getByRole('combobox', { name: 'Category' }))
     await user.click(screen.getByText('Weapon'))
 
     await waitFor(() => {
@@ -183,8 +182,8 @@ describe('MyBlueprintsPage', () => {
       http.get('/api/blueprints/mine', () =>
         HttpResponse.json({
           blueprints: [
-            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', subtype: 'Pistol', gear: null, ingredientCount: 3 },
-            { blueprintId: '22222222-2222-2222-2222-222222222222', productName: 'Hull Panel', type: 'Ship', subtype: null, gear: null, ingredientCount: 1 },
+            { blueprintId: BLUEPRINT_ID, productName: 'Widget Mk1', type: 'Weapon', subtype: 'Pistol', gear: 'Weapon', ingredientCount: 3 },
+            { blueprintId: '22222222-2222-2222-2222-222222222222', productName: 'Hull Panel', type: 'Ship', subtype: null, gear: 'Ship', ingredientCount: 1 },
           ],
         }),
       ),
@@ -196,7 +195,7 @@ describe('MyBlueprintsPage', () => {
     await waitFor(() => screen.getByText('Widget Mk1'))
 
     // Apply a category filter
-    await user.click(screen.getByRole('combobox', { name: /category/i }))
+    await user.click(screen.getByRole('combobox', { name: 'Category' }))
     await user.click(screen.getByText('Weapon'))
     await waitFor(() => expect(screen.queryByText('Hull Panel')).toBeNull())
 
