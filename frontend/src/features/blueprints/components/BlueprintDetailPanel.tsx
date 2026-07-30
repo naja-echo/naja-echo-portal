@@ -3,11 +3,18 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Button } from '@/components/ui/button'
 import { useGetBlueprintDetail } from '../hooks/useGetBlueprintDetail'
 import { useRemoveMyBlueprint } from '../hooks/useRemoveMyBlueprint'
-import { blueprintLabel } from '../config/blueprintLabels'
+import { blueprintLabel, extractArmorType } from '../config/blueprintLabels'
 
 interface BlueprintDetailPanelProps {
   blueprintId: string | null
+  subtype: string | null
+  tag: string | null
   onClose: () => void
+}
+
+function resolveTypeDisplay(tag: string | null, subtype: string | null, type: string | null): string {
+  const value = extractArmorType(tag) ?? subtype ?? type
+  return value ? blueprintLabel(value) : '—'
 }
 
 function formatCraftTime(seconds: number | null | undefined): string {
@@ -17,7 +24,7 @@ function formatCraftTime(seconds: number | null | undefined): string {
   return `${m}m ${s}s`
 }
 
-export function BlueprintDetailPanel({ blueprintId, onClose }: BlueprintDetailPanelProps) {
+export function BlueprintDetailPanel({ blueprintId, subtype, tag, onClose }: BlueprintDetailPanelProps) {
   const [isConfirming, setIsConfirming] = useState(false)
   const { data, isLoading } = useGetBlueprintDetail(blueprintId)
   const { mutate: remove, isPending: isRemoving } = useRemoveMyBlueprint()
@@ -49,7 +56,7 @@ export function BlueprintDetailPanel({ blueprintId, onClose }: BlueprintDetailPa
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
                 <p className="text-muted-foreground font-medium">Type</p>
-                <p>{data.type ? blueprintLabel(data.type) : '—'}</p>
+                <p>{resolveTypeDisplay(tag, subtype, data.type)}</p>
               </div>
               <div>
                 <p className="text-muted-foreground font-medium">Craft Time</p>
@@ -60,6 +67,24 @@ export function BlueprintDetailPanel({ blueprintId, onClose }: BlueprintDetailPa
                 <p>{data.ingredientCount}</p>
               </div>
             </div>
+
+            {/* Component attributes (vehicle gear) */}
+            {(data.componentClass || data.componentSize != null || data.componentGrade) && (
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground font-medium">Size</p>
+                  <p>{data.componentSize != null ? data.componentSize : '—'}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground font-medium">Class</p>
+                  <p>{data.componentClass ?? '—'}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground font-medium">Grade</p>
+                  <p>{data.componentGrade ?? '—'}</p>
+                </div>
+              </div>
+            )}
 
             {/* Ingredient listing */}
             <div>

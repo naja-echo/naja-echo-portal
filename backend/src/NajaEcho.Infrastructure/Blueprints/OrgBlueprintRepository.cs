@@ -9,8 +9,8 @@ namespace NajaEcho.Infrastructure.Blueprints;
 
 public sealed class OrgBlueprintRepository(AppDbContext db) : IOrgBlueprintRepository
 {
-    private sealed record ListRow(Guid BlueprintId, string? ProductName, string? Type, string? Subtype, string? Gear, string? Tag, int IngredientCount);
-    private sealed record DetailHeaderRow(Guid BlueprintId, string? ProductName, string? Type, int? CraftTimeSeconds, int IngredientCount);
+    private sealed record ListRow(Guid BlueprintId, string? ProductName, string? Type, string? Subtype, string? Gear, string? Tag, string? ComponentClass, int? ComponentSize, string? ComponentGrade, int IngredientCount);
+    private sealed record DetailHeaderRow(Guid BlueprintId, string? ProductName, string? Type, int? CraftTimeSeconds, string? ComponentClass, int? ComponentSize, string? ComponentGrade, int IngredientCount);
     private sealed record SlotOptionRow(int SlotIndex, string SlotName, int OptionIndex, string MaterialName, string Kind, decimal Quantity);
     private sealed record OwnerRow(Guid UserId, string DisplayName);
 
@@ -26,17 +26,22 @@ public sealed class OrgBlueprintRepository(AppDbContext db) : IOrgBlueprintRepos
               b.subtype                               AS subtype,
               b.gear                                  AS gear,
               b.tag                                   AS tag,
+              COALESCE(b.component_class, sca.class)  AS component_class,
+              COALESCE(b.component_size, sca.size, CASE WHEN b.subtype ~ '^size\d+$' THEN substring(b.subtype FROM 5)::int END) AS component_size,
+              COALESCE(b.component_grade, sca.grade)  AS component_grade,
               COUNT(DISTINCT bso.slot_index)::int     AS ingredient_count
             FROM user_blueprints ub
             JOIN sc.blueprints b ON b.id = ub.blueprint_id
+            LEFT JOIN sc.items i ON i.uuid = b.product_entity_class::text
+            LEFT JOIN sc.ship_component_attributes sca ON sca.item_id = i.id
             LEFT JOIN sc.blueprint_tiers bt ON bt.blueprint_id = b.id AND bt.tier_index = 0
             LEFT JOIN sc.blueprint_slot_options bso ON bso.tier_id = bt.id
-            GROUP BY b.id, b.product_name, b.type, b.subtype, b.gear, b.tag
+            GROUP BY b.id, b.product_name, b.type, b.subtype, b.gear, b.tag, b.component_class, b.component_size, b.component_grade, sca.class, sca.size, sca.grade
             ORDER BY b.product_name NULLS LAST, b.id
             """).ToListAsync(ct);
 
         return rows
-            .Select(r => new OrgBlueprintListItemDto(r.BlueprintId, r.ProductName, r.Type, r.Subtype, r.Gear, r.Tag, r.IngredientCount))
+            .Select(r => new OrgBlueprintListItemDto(r.BlueprintId, r.ProductName, r.Type, r.Subtype, r.Gear, r.Tag, r.ComponentClass, r.ComponentSize, r.ComponentGrade, r.IngredientCount))
             .ToList();
     }
 
@@ -51,13 +56,18 @@ public sealed class OrgBlueprintRepository(AppDbContext db) : IOrgBlueprintRepos
               b.product_name                          AS product_name,
               b.type                                  AS type,
               bt.craft_time_seconds                   AS craft_time_seconds,
+              COALESCE(b.component_class, sca.class)  AS component_class,
+              COALESCE(b.component_size, sca.size, CASE WHEN b.subtype ~ '^size\d+$' THEN substring(b.subtype FROM 5)::int END) AS component_size,
+              COALESCE(b.component_grade, sca.grade)  AS component_grade,
               COUNT(DISTINCT bso.slot_index)::int     AS ingredient_count
             FROM user_blueprints ub
             JOIN sc.blueprints b ON b.id = ub.blueprint_id
+            LEFT JOIN sc.items i ON i.uuid = b.product_entity_class::text
+            LEFT JOIN sc.ship_component_attributes sca ON sca.item_id = i.id
             LEFT JOIN sc.blueprint_tiers bt ON bt.blueprint_id = b.id AND bt.tier_index = 0
             LEFT JOIN sc.blueprint_slot_options bso ON bso.tier_id = bt.id
             WHERE ub.blueprint_id = {blueprintId}
-            GROUP BY b.id, b.product_name, b.type, bt.craft_time_seconds
+            GROUP BY b.id, b.product_name, b.type, bt.craft_time_seconds, b.subtype, b.component_class, b.component_size, b.component_grade, sca.class, sca.size, sca.grade
             """).FirstOrDefaultAsync(ct);
 
         if (header is null)
@@ -110,6 +120,9 @@ public sealed class OrgBlueprintRepository(AppDbContext db) : IOrgBlueprintRepos
             header.Type,
             header.CraftTimeSeconds,
             header.IngredientCount,
+            header.ComponentClass,
+            header.ComponentSize,
+            header.ComponentGrade,
             slots,
             owners);
     }

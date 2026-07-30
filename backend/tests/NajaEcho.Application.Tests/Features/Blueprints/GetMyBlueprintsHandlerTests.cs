@@ -54,7 +54,7 @@ public class GetMyBlueprintsHandlerTests
     {
         var blueprintId = Guid.NewGuid();
         var repo = new FakeUserBlueprintRepository();
-        repo.Seed(UserId, [new MyBlueprintListItemDto(blueprintId, "Widget Mk1", "Weapon", "Pistol", null, 3)]);
+        repo.Seed(UserId, [new MyBlueprintListItemDto(blueprintId, "Widget Mk1", "Weapon", "Pistol", null, null, null, null, null, 3)]);
         var handler = new GetMyBlueprintsHandler(repo);
 
         var result = await handler.HandleAsync(new GetMyBlueprintsQuery(UserId));
@@ -70,7 +70,7 @@ public class GetMyBlueprintsHandlerTests
     public async Task Handle_OnlyReturnsCallerBlueprints_NotOtherUsers()
     {
         var repo = new FakeUserBlueprintRepository();
-        repo.Seed(OtherUserId, [new MyBlueprintListItemDto(Guid.NewGuid(), "Other Widget", null, null, null, 1)]);
+        repo.Seed(OtherUserId, [new MyBlueprintListItemDto(Guid.NewGuid(), "Other Widget", null, null, null, null, null, null, null, 1)]);
         var handler = new GetMyBlueprintsHandler(repo);
 
         var result = await handler.HandleAsync(new GetMyBlueprintsQuery(UserId));

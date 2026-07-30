@@ -70,7 +70,7 @@ public static class BlueprintEndpoints
         Log.Information("GetMyBlueprints {UserId} returned {Count}", userId, items.Count);
 
         return Results.Ok(new MyBlueprintListResponse(
-            items.Select(i => new MyBlueprintListItemResponse(i.BlueprintId, i.ProductName, i.Type, i.Subtype, i.Gear, i.Tag, i.IngredientCount)).ToList()));
+            items.Select(i => new MyBlueprintListItemResponse(i.BlueprintId, i.ProductName, i.Type, i.Subtype, i.Gear, i.Tag, i.ComponentClass, i.ComponentSize, i.ComponentGrade, i.IngredientCount)).ToList()));
     }
 
     private static async Task<IResult> AddMyBlueprint(
@@ -94,7 +94,7 @@ public static class BlueprintEndpoints
 
             return Results.Created(
                 $"/api/blueprints/mine",
-                new MyBlueprintListItemResponse(item.BlueprintId, item.ProductName, item.Type, item.Subtype, item.Gear, item.Tag, item.IngredientCount));
+                new MyBlueprintListItemResponse(item.BlueprintId, item.ProductName, item.Type, item.Subtype, item.Gear, item.Tag, item.ComponentClass, item.ComponentSize, item.ComponentGrade, item.IngredientCount));
         }
         catch (BlueprintNotFoundException ex)
         {
@@ -130,6 +130,9 @@ public static class BlueprintEndpoints
             detail.Type,
             detail.CraftTimeSeconds,
             detail.IngredientCount,
+            detail.ComponentClass,
+            detail.ComponentSize,
+            detail.ComponentGrade,
             detail.Slots.Select(s => new BlueprintSlotResponse(
                 s.SlotIndex,
                 s.SlotName,
@@ -170,7 +173,7 @@ public static class BlueprintEndpoints
         var items = await handler.HandleAsync(new GetOrgBlueprintsQuery(userId), ct);
 
         return Results.Ok(new OrgBlueprintListResponse(
-            items.Select(i => new OrgBlueprintListItemResponse(i.BlueprintId, i.ProductName, i.Type, i.Subtype, i.Gear, i.Tag, i.IngredientCount)).ToList()));
+            items.Select(i => new OrgBlueprintListItemResponse(i.BlueprintId, i.ProductName, i.Type, i.Subtype, i.Gear, i.Tag, i.ComponentClass, i.ComponentSize, i.ComponentGrade, i.IngredientCount)).ToList()));
     }
 
     private static async Task<IResult> GetOrgBlueprintDetail(
@@ -195,6 +198,9 @@ public static class BlueprintEndpoints
             detail.Type,
             detail.CraftTimeSeconds,
             detail.IngredientCount,
+            detail.ComponentClass,
+            detail.ComponentSize,
+            detail.ComponentGrade,
             detail.Slots.Select(s => new BlueprintSlotResponse(
                 s.SlotIndex,
                 s.SlotName,

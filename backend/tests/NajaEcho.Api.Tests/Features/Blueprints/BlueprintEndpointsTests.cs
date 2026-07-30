@@ -111,7 +111,7 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
     {
         var blueprintId = Guid.NewGuid();
         _factory.Services.GetRequiredService<FakeUserBlueprintTestRepository>()
-            .Seed(UserId, [new MyBlueprintListItemDto(blueprintId, "Widgeteer", "Weapon", null, null, 4)]);
+            .Seed(UserId, [new MyBlueprintListItemDto(blueprintId, "Widgeteer", "Weapon", null, null, null, null, null, null, 4)]);
 
         var response = await AuthenticatedClient().GetAsync("/api/blueprints/mine");
 
@@ -128,7 +128,7 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
     {
         var blueprintId = Guid.NewGuid();
         _factory.Services.GetRequiredService<FakeUserBlueprintTestRepository>()
-            .Seed(UserId, [new MyBlueprintListItemDto(blueprintId, "Widget Mk1", "Weapon", "Pistol", null, 2)]);
+            .Seed(UserId, [new MyBlueprintListItemDto(blueprintId, "Widget Mk1", "Weapon", "Pistol", null, null, null, null, null, 2)]);
 
         var response = await AuthenticatedClient().GetAsync("/api/blueprints/mine");
 
@@ -186,7 +186,7 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
     {
         var blueprintId = Guid.NewGuid();
         _factory.Services.GetRequiredService<FakeUserBlueprintTestRepository>()
-            .AddResult = new MyBlueprintListItemDto(blueprintId, "Widget", "Weapon", null, null, 2);
+            .AddResult = new MyBlueprintListItemDto(blueprintId, "Widget", "Weapon", null, null, null, null, null, null, 2);
 
         var response = await AuthenticatedClient().PostAsync("/api/blueprints/mine",
             Json($$"""{"blueprintId":"{{blueprintId}}"}"""));
@@ -245,7 +245,7 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
     {
         var blueprintId = Guid.NewGuid();
         _factory.Services.GetRequiredService<FakeUserBlueprintTestRepository>()
-            .DetailResult = new BlueprintDetailDto(blueprintId, "Widget Mk1", "Weapon", 330, 2,
+            .DetailResult = new BlueprintDetailDto(blueprintId, "Widget Mk1", "Weapon", 330, 2, null, null, null,
                 [new BlueprintSlotDto(0, "Cast Iron", [new BlueprintSlotOptionDto(0, "Iron Ore", "material", 1.5m)])]);
 
         var response = await AuthenticatedClient().GetAsync($"/api/blueprints/mine/{blueprintId}");
@@ -302,7 +302,7 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
     {
         var blueprintId = Guid.NewGuid();
         _factory.Services.GetRequiredService<FakeOrgBlueprintTestRepository>()
-            .ListResult = [new OrgBlueprintListItemDto(blueprintId, "Hull Panel", "Component", null, null, 2)];
+            .ListResult = [new OrgBlueprintListItemDto(blueprintId, "Hull Panel", "Component", null, null, null, null, null, null, 2)];
 
         var response = await AuthenticatedClient().GetAsync("/api/blueprints/org");
 
@@ -318,7 +318,7 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
     {
         var blueprintId = Guid.NewGuid();
         _factory.Services.GetRequiredService<FakeOrgBlueprintTestRepository>()
-            .ListResult = [new OrgBlueprintListItemDto(blueprintId, "Hull Panel", "Component", "Armor", null, 2)];
+            .ListResult = [new OrgBlueprintListItemDto(blueprintId, "Hull Panel", "Component", "Armor", null, null, null, null, null, 2)];
 
         var response = await AuthenticatedClient().GetAsync("/api/blueprints/org");
 
@@ -353,7 +353,7 @@ public class BlueprintEndpointsTests : IClassFixture<WebApplicationFactory<Progr
         var ownerId = Guid.NewGuid();
         _factory.Services.GetRequiredService<FakeOrgBlueprintTestRepository>()
             .DetailResult = new OrgBlueprintDetailDto(
-                blueprintId, "Widget Mk1", "Weapon", 330, 2,
+                blueprintId, "Widget Mk1", "Weapon", 330, 2, null, null, null,
                 [new BlueprintSlotDto(0, "Cast Iron", [new BlueprintSlotOptionDto(0, "Iron Ore", "material", 1.5m)])],
                 [new OrgBlueprintOwnerDto(ownerId, "Nashtok")]);
 
@@ -412,7 +412,7 @@ internal sealed class FakeUserBlueprintTestRepository : IUserBlueprintRepository
     {
         if (ThrowNotFound) throw new BlueprintNotFoundException(blueprintId);
         if (ThrowDuplicate) throw new DuplicateBlueprintException(blueprintId);
-        return Task.FromResult(AddResult ?? new MyBlueprintListItemDto(blueprintId, null, null, null, 0));
+        return Task.FromResult(AddResult ?? new MyBlueprintListItemDto(blueprintId, null, null, null, null, null, null, null, null, 0));
     }
 
     public Task<BlueprintDetailDto?> GetDetailAsync(Guid userId, Guid blueprintId, CancellationToken ct = default) =>
@@ -442,6 +442,9 @@ internal sealed class FakeSearchableBlueprintRepository : IBlueprintRepository
 
     public Task<IReadOnlyList<BlueprintSearchResultDto>> SearchAsync(string term, int limit = 20, CancellationToken ct = default) =>
         Task.FromResult(SearchResults);
+
+    public Task<int> EnrichAsync(IReadOnlyList<NajaEcho.Application.Features.Blueprints.EnrichBlueprints.ParsedItemAttributes> items, CancellationToken ct = default) =>
+        Task.FromResult(0);
 }
 
 internal sealed class FakeOrgBlueprintTestRepository : IOrgBlueprintRepository

@@ -28,6 +28,11 @@ export const CATEGORY_LABELS: Record<string, string> = {
   arms: 'Arms',
   legs: 'Legs',
   backpack: 'Backpack',
+  // Weapon subtypes
+  lmg: 'LMG',
+  smg: 'SMG',
+  // Subtype fallback
+  misc: 'Misc',
 }
 
 export function blueprintLabel(value: string): string {

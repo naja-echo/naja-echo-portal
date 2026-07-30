@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using NajaEcho.Application.Abstractions;
+using NajaEcho.Application.Features.Blueprints.EnrichBlueprints;
+using Npgsql;
+using NpgsqlTypes;
 using NajaEcho.Application.Features.Blueprints.GetBlueprints;
 using NajaEcho.Application.Features.Blueprints.ImportBlueprints;
 using NajaEcho.Application.Features.Blueprints.SearchBlueprints;
@@ -189,6 +192,33 @@ public sealed class BlueprintRepository(AppDbContext db) : IBlueprintRepository
             .ToListAsync(ct);
 
         return rows;
+    }
+
+    public async Task<int> EnrichAsync(IReadOnlyList<ParsedItemAttributes> items, CancellationToken ct = default)
+    {
+        if (items.Count == 0)
+            return 0;
+
+        // Pass four typed arrays to UNNEST — one round-trip regardless of item count.
+        var entityClasses = items.Select(i => i.EntityClass).ToArray();
+        var classes       = items.Select(i => i.ComponentClass).ToArray();
+        var sizes         = items.Select(i => i.ComponentSize).ToArray();
+        var grades        = items.Select(i => i.ComponentGrade).ToArray();
+
+        var p0 = new NpgsqlParameter { Value = entityClasses, NpgsqlDbType = NpgsqlDbType.Array | NpgsqlDbType.Uuid };
+        var p1 = new NpgsqlParameter { Value = classes,       NpgsqlDbType = NpgsqlDbType.Array | NpgsqlDbType.Text };
+        var p2 = new NpgsqlParameter { Value = sizes,         NpgsqlDbType = NpgsqlDbType.Array | NpgsqlDbType.Smallint };
+        var p3 = new NpgsqlParameter { Value = grades,        NpgsqlDbType = NpgsqlDbType.Array | NpgsqlDbType.Text };
+
+        return await db.Database.ExecuteSqlRawAsync("""
+            UPDATE sc.blueprints AS b
+            SET
+                component_class = v.component_class,
+                component_size  = v.component_size,
+                component_grade = v.component_grade
+            FROM UNNEST({0}, {1}, {2}, {3}) AS v(entity_class, component_class, component_size, component_grade)
+            WHERE b.product_entity_class = v.entity_class
+            """, [p0, p1, p2, p3], ct);
     }
 
     private static void UpdateBlueprint(CraftingBlueprint stored, CraftingBlueprint inc, DateTimeOffset now)

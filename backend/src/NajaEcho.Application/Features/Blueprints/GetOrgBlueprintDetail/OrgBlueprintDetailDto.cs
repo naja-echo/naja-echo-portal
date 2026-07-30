@@ -10,5 +10,8 @@ public sealed record OrgBlueprintDetailDto(
     string? Type,
     int? CraftTimeSeconds,
     int IngredientCount,
+    string? ComponentClass,
+    int? ComponentSize,
+    string? ComponentGrade,
     IReadOnlyList<BlueprintSlotDto> Slots,
     IReadOnlyList<OrgBlueprintOwnerDto> Owners);

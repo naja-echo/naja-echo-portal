@@ -33,7 +33,7 @@ public class AddMyBlueprintHandlerTests
             if (!_existing.Add((userId, blueprintId)))
                 throw new DuplicateBlueprintException(blueprintId);
 
-            return Task.FromResult(new MyBlueprintListItemDto(blueprintId, "Widget", "Weapon", null, null, 2));
+            return Task.FromResult(new MyBlueprintListItemDto(blueprintId, "Widget", "Weapon", null, null, null, null, null, null, 2));
         }
 
         public Task<BlueprintDetailDto?> GetDetailAsync(Guid userId, Guid blueprintId, CancellationToken ct = default) =>

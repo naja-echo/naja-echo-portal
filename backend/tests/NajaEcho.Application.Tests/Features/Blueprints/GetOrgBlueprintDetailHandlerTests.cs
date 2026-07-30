@@ -47,6 +47,7 @@ public class GetOrgBlueprintDetailHandlerTests
             "Weapon",
             330,
             2,
+            null, null, null,
             [new BlueprintSlotDto(0, "Barrel", [new BlueprintSlotOptionDto(0, "Steel", "Material", 1.5m)])],
             [new OrgBlueprintOwnerDto(UserId, "TestUser")]);
         repo.SeedDetail(detail);
@@ -69,7 +70,7 @@ public class GetOrgBlueprintDetailHandlerTests
     public async Task Handle_BlueprintWithNoSlots_ReturnsEmptySlotsList()
     {
         var repo = new FakeRepo();
-        repo.SeedDetail(new OrgBlueprintDetailDto(BlueprintId, "Widget", null, null, 0, [], []));
+        repo.SeedDetail(new OrgBlueprintDetailDto(BlueprintId, "Widget", null, null, 0, null, null, null, [], []));
         var handler = new GetOrgBlueprintDetailHandler(repo);
 
         var result = await handler.HandleAsync(new GetOrgBlueprintDetailQuery(UserId, BlueprintId));
@@ -83,7 +84,7 @@ public class GetOrgBlueprintDetailHandlerTests
         var userId2 = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000002");
         var repo = new FakeRepo();
         repo.SeedDetail(new OrgBlueprintDetailDto(
-            BlueprintId, "Widget", null, null, 0, [],
+            BlueprintId, "Widget", null, null, 0, null, null, null, [],
             [
                 new OrgBlueprintOwnerDto(UserId, "Alice"),
                 new OrgBlueprintOwnerDto(userId2, "Bob"),

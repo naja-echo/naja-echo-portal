@@ -17,6 +17,9 @@ export interface BlueprintDetail {
   type: string | null
   craftTimeSeconds: number | null
   ingredientCount: number
+  componentClass: string | null
+  componentSize: number | null
+  componentGrade: string | null
   slots: BlueprintSlot[]
 }
 
@@ -37,6 +40,9 @@ export interface MyBlueprintListItem {
   subtype: string | null
   gear: string | null
   tag: string | null
+  componentClass: string | null
+  componentSize: number | null
+  componentGrade: string | null
   ingredientCount: number
 }
 
@@ -78,6 +84,9 @@ export interface OrgBlueprintListItem {
   subtype: string | null
   gear: string | null
   tag: string | null
+  componentClass: string | null
+  componentSize: number | null
+  componentGrade: string | null
   ingredientCount: number
 }
 
@@ -96,6 +105,9 @@ export interface OrgBlueprintDetail {
   type: string | null
   craftTimeSeconds: number | null
   ingredientCount: number
+  componentClass: string | null
+  componentSize: number | null
+  componentGrade: string | null
   slots: BlueprintSlot[]
   owners: BlueprintOwner[]
 }

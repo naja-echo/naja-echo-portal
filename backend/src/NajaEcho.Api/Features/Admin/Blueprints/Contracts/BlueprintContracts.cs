@@ -23,3 +23,5 @@ public sealed record BlueprintListItemResponse(
     string? Manufacturer);
 
 public sealed record BlueprintListResponse(IReadOnlyList<BlueprintListItemResponse> Blueprints);
+
+public sealed record EnrichBlueprintsResponse(int ItemsParsed, int BlueprintsUpdated);

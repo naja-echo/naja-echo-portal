@@ -6,7 +6,7 @@ import { BlueprintFilters } from '../components/BlueprintFilters'
 import { getBlueprintColumns } from '../config/blueprintColumns'
 
 export function OrgBlueprintsPage() {
-  const [selectedBlueprintId, setSelectedBlueprintId] = useState<string | null>(null)
+  const [selected, setSelected] = useState<{ blueprintId: string; subtype: string | null; tag: string | null } | null>(null)
   const { data, isLoading } = useOrgBlueprints()
 
   const blueprints = data?.blueprints ?? []
@@ -15,10 +15,16 @@ export function OrgBlueprintsPage() {
     setName,
     setCategory,
     setSubcategory,
-    setArmorType,
+    setItemType,
+    setComponentClass,
+    setComponentSize,
+    setComponentGrade,
     categoryOptions,
     subcategoryOptions,
-    armorTypeOptions,
+    itemTypeOptions,
+    componentClassOptions,
+    componentSizeOptions,
+    componentGradeOptions,
     filtered,
   } = useBlueprintFilters(blueprints)
 
@@ -33,14 +39,23 @@ export function OrgBlueprintsPage() {
           name={filters.name}
           category={filters.category}
           subcategory={filters.subcategory}
-          armorType={filters.armorType}
+          itemType={filters.itemType}
+          componentClass={filters.componentClass}
+          componentSize={filters.componentSize}
+          componentGrade={filters.componentGrade}
           categoryOptions={categoryOptions}
           subcategoryOptions={subcategoryOptions}
-          armorTypeOptions={armorTypeOptions}
+          itemTypeOptions={itemTypeOptions}
+          componentClassOptions={componentClassOptions}
+          componentSizeOptions={componentSizeOptions}
+          componentGradeOptions={componentGradeOptions}
           onNameChange={setName}
           onCategoryChange={setCategory}
           onSubcategoryChange={setSubcategory}
-          onArmorTypeChange={setArmorType}
+          onItemTypeChange={setItemType}
+          onComponentClassChange={setComponentClass}
+          onComponentSizeChange={setComponentSize}
+          onComponentGradeChange={setComponentGrade}
         />
       )}
 
@@ -55,7 +70,7 @@ export function OrgBlueprintsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/50">
-                {getBlueprintColumns(filters.category).map(col => (
+                {getBlueprintColumns(filters.category, filters.subcategory).map(col => (
                   <th key={col.header} className="px-4 py-3 text-left font-medium">{col.header}</th>
                 ))}
               </tr>
@@ -65,9 +80,9 @@ export function OrgBlueprintsPage() {
                 <tr
                   key={bp.blueprintId}
                   className="border-b last:border-0 cursor-pointer hover:bg-muted/50"
-                  onClick={() => setSelectedBlueprintId(bp.blueprintId)}
+                  onClick={() => setSelected({ blueprintId: bp.blueprintId, subtype: bp.subtype, tag: bp.tag })}
                 >
-                  {getBlueprintColumns(filters.category).map(col => (
+                  {getBlueprintColumns(filters.category, filters.subcategory).map(col => (
                     <td key={col.header} className={`px-4 py-3${col.className ? ` ${col.className}` : ''}`}>
                       {col.render(bp)}
                     </td>
@@ -80,8 +95,10 @@ export function OrgBlueprintsPage() {
       )}
 
       <OrgBlueprintDetailPanel
-        blueprintId={selectedBlueprintId}
-        onClose={() => setSelectedBlueprintId(null)}
+        blueprintId={selected?.blueprintId ?? null}
+        subtype={selected?.subtype ?? null}
+        tag={selected?.tag ?? null}
+        onClose={() => setSelected(null)}
       />
     </div>
   )

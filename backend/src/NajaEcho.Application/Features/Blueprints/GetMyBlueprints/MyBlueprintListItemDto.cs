@@ -7,4 +7,7 @@ public sealed record MyBlueprintListItemDto(
     string? Subtype,
     string? Gear,
     string? Tag,
+    string? ComponentClass,
+    int? ComponentSize,
+    string? ComponentGrade,
     int IngredientCount);

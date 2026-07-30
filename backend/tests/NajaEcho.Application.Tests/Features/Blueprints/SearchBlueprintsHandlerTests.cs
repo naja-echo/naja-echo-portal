@@ -1,5 +1,6 @@
 using FluentAssertions;
 using NajaEcho.Application.Abstractions;
+using NajaEcho.Application.Features.Blueprints.EnrichBlueprints;
 using NajaEcho.Application.Features.Blueprints.GetBlueprints;
 using NajaEcho.Application.Features.Blueprints.ImportBlueprints;
 using NajaEcho.Application.Features.Blueprints.SearchBlueprints;
@@ -17,6 +18,9 @@ public class SearchBlueprintsHandlerTests
         {
             _results = results?.ToList() ?? [];
         }
+
+        public Task<int> EnrichAsync(IReadOnlyList<ParsedItemAttributes> items, CancellationToken ct = default) =>
+            throw new NotImplementedException();
 
         public Task<IReadOnlyList<BlueprintSearchResultDto>> SearchAsync(string term, int limit = 20, CancellationToken ct = default)
         {
